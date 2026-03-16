@@ -1,0 +1,48 @@
+* { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: rgba(139,160,105,0.3) transparent; }
+html, body, #root { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: #1A1D16; }
+::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(139,160,105,0.3); border-radius: 3px; }
+input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+@keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes importProgress { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+.tab-btn { cursor: pointer; padding: 8px 16px; border: 1px solid transparent; border-radius: 6px 6px 0 0; background: transparent; color: #7A8A60; font-family: 'Special Elite', cursive; font-size: 12px; letter-spacing: 2px; transition: all 0.2s; user-select: none; }
+.tab-btn:hover { background: rgba(139,160,105,0.08); color: #A0B880; }
+.tab-btn.active { background: rgba(139,160,105,0.1); border-color: rgba(139,160,105,0.3); border-bottom-color: #1E2118; color: #8BA069; }
+.tab-btn.kia-tab { color: #884040; }
+.tab-btn.kia-tab:hover { background: rgba(140,50,50,0.08); color: #A05050; }
+.tab-btn.kia-tab.active { background: rgba(140,50,50,0.1); border-color: rgba(140,50,50,0.3); border-bottom-color: #1E2118; color: #C44040; }
+.skill-row { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 4px; transition: background 0.15s; }
+.skill-row:hover { background: rgba(139,160,105,0.06); }
+.sidebar-item { padding: 12px 16px; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s, transform 0.15s; position: relative; }
+.sidebar-item:hover { background: rgba(139,160,105,0.08); }
+.sidebar-item.active { background: rgba(139,160,105,0.1); border-left-color: #8BA069; }
+.sidebar-item.kia { opacity: 0.7; }
+.sidebar-item.kia.active { background: rgba(140,50,50,0.1); border-left-color: #C44040; }
+.sidebar-item.drag-over { border-top: 2px solid #8BA069; padding-top: 10px; }
+.sidebar-item.dragging { opacity: 0.4; transform: scale(0.97); }
+.sidebar-item .drag-handle { opacity: 0; transition: opacity 0.2s; cursor: grab; padding: 2px 4px; font-size: 11px; color: #5A6A40; user-select: none; }
+.sidebar-item:hover .drag-handle { opacity: 0.6; }
+.sidebar-item .drag-handle:hover { opacity: 1; color: #8BA069; }
+.weapon-row-dragging { opacity: 0.35; transform: scale(0.98); }
+.weapon-row-drag-over { border-top: 2px solid rgba(139,160,105,0.6) !important; }
+.weapon-drag-handle { opacity: 0; transition: opacity 0.2s; cursor: grab; color: #5A6A40; user-select: none; font-size: 13px; padding: 0 4px; }
+tr:hover .weapon-drag-handle { opacity: 0.5; }
+.weapon-drag-handle:hover { opacity: 1 !important; color: #8BA069; }
+.sidebar-action-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.sidebar-action-btn .btn-label { position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%); background: rgba(20,25,18,0.95); border: 1px solid rgba(139,160,105,0.25); color: #8BA069; font-family: 'Special Elite', cursive; font-size: 9px; letter-spacing: 1.5px; padding: 2px 7px; border-radius: 3px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 20; }
+.sidebar-action-btn:hover .btn-label { opacity: 1; }
+.sidebar-action-btn.danger-label .btn-label { color: #B45050; border-color: rgba(180,80,80,0.3); }
+.ammo-counter input[type=number]::-webkit-inner-spin-button,
+.ammo-counter input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.btn { cursor: pointer; border: 1px solid rgba(139,160,105,0.3); background: rgba(139,160,105,0.08); color: #8BA069; font-family: 'Special Elite', cursive; letter-spacing: 2px; padding: 8px 16px; border-radius: 4px; font-size: 12px; transition: all 0.2s; user-select: none; }
+.btn:hover { background: rgba(139,160,105,0.18); border-color: rgba(139,160,105,0.5); }
+.btn-danger { border-color: rgba(180,80,80,0.3); background: rgba(180,80,80,0.08); color: #B45050; }
+.btn-danger:hover { background: rgba(180,80,80,0.18); border-color: rgba(180,80,80,0.5); }
+.btn-kia { border-color: rgba(180,50,50,0.4); background: rgba(180,50,50,0.12); color: #C44040; letter-spacing: 3px; }
+.btn-kia:hover { background: rgba(180,50,50,0.25); border-color: rgba(180,50,50,0.6); box-shadow: 0 0 20px rgba(180,50,50,0.1); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.kia-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(180,50,50,0.2); border: 1px solid rgba(180,50,50,0.4); border-radius: 3px; padding: 1px 6px; font-family: 'Special Elite', cursive; font-size: 9px; letter-spacing: 2px; color: #C44040; margin-left: 6px; }
+.confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 0.2s ease; }
+.confirm-box { background: #1A1D16; border: 1px solid rgba(180,50,50,0.3); border-radius: 8px; padding: 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+.tab-scroll-mobile { -ms-overflow-style: none; scrollbar-width: none; }
+.tab-scroll-mobile::-webkit-scrollbar { display: none; }

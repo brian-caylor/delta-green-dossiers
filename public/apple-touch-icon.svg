@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="20" fill="#1A1D16"/>
+  <g transform="translate(90,90)">
+    <polygon points="0,-64 55,32 -55,32" fill="none" stroke="#8BA069" stroke-width="5" stroke-linejoin="round"/>
+    <polygon points="0,32 -28,-16 28,-16" fill="none" stroke="#8BA069" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="0" cy="2" r="8" fill="#8BA069"/>
+    <circle cx="0" cy="2" r="4" fill="#1A1D16"/>
+    <text x="0" y="58" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="25" fill="#5A6A40" letter-spacing="4">DG</text>
+  </g>
+</svg>
