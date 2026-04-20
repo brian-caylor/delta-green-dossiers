@@ -1,5 +1,7 @@
 # Delta Green — Agent Dossiers — User Guide
 
+*Last updated: 2026-04-20 · [What's new](CHANGELOG.md)*
+
 A digital character sheet manager for [Delta Green](https://www.delta-green.com/). Progressive Web App; installable on any device; cloud-synced across your Google account.
 
 This guide covers everything the app can do. For a friendlier 2-minute onboarding, see [QUICKSTART.md](QUICKSTART.md).
@@ -29,7 +31,7 @@ This guide covers everything the app can do. For a friendlier 2-minute onboardin
 19. [Cloud Sync, Offline & Auto-Save](#19-cloud-sync-offline--auto-save)
 20. [Keyboard Shortcuts & Tips](#20-keyboard-shortcuts--tips)
 21. [Installing as a PWA](#21-installing-as-a-pwa)
-22. [The Global Dice Roller](#22-the-global-dice-roller)
+22. [Global Dice Roller](#22-global-dice-roller)
 
 ---
 
@@ -590,41 +592,89 @@ Installing doesn't change where your data lives — the cloud is still the sourc
 
 ---
 
----
+## 22. Global Dice Roller
 
-## 22. The Global Dice Roller
+A companion roller alongside the inline per-skill dice buttons. Use it for anything not tied to a specific skill row — damage dice, Lethality rolls, ad-hoc checks, random encounter rolls, stat generation.
 
-An always-on dice roller sits in the top bar as a **⚄** icon (only visible while you have a character open). Use it any time you need a roll that isn't tied to a specific skill row — damage dice, Lethality rolls, random encounters, stat generation, anything.
+The **⚄ icon** in the top bar opens the **Field Dice** panel (only visible while a character is open). Close it by clicking ⚄ again, pressing **Esc**, or clicking outside the panel.
 
-### Opening the panel
-Click the **⚄** icon next to the theme switcher. A panel slides down from below the top bar with:
-- **Quick-pick dice**: `d4 / d6 / d8 / d10 / d12 / d20 / d100`. Click any to set the formula.
-- **Formula field**: type any valid formula — `2d6+3`, `1d10-1`, `d100`, `3d6`. The Roll button disables if the formula is invalid.
-- **Target %** (only shown for `d100`): optional; if filled in, the roll uses Delta Green pass/fail/critical/fumble rules.
-- **ROLL** button — triggers the roll.
-- **Recent rolls** history (last 10 this session). Clear with the small button.
+### Basic Roll — one-click dice
 
-Close the panel by clicking the **⚄** again, pressing **Esc**, or clicking outside it.
+Seven clickable tiles with SVG die shapes:
+
+| Tile | Rolls |
+|---|---|
+| **d4** | One d4 |
+| **d6** | One d6 |
+| **d8** | One d8 |
+| **d10** | One d10 |
+| **d12** | One d12 |
+| **d20** | One d20 |
+| **d100** | One d100 (no target — use Advanced for a skill check) |
+
+Click any tile to roll immediately. Result lands in the overlay and the Recent rolls history.
+
+### Advanced Roll — count × die ± modifier
+
+Below Basic Roll:
+
+- **COUNT** — how many dice of this type (1–50)
+- **DIE** — die type (d4 through d100)
+- **MOD** — signed modifier (−99 to +99). The browser's up/down arrows step through `… 3, 2, 1, 0, −1, −2 …` across zero.
+
+The live formula renders in handwritten script below the controls (e.g. `2d6+3`). Press **ROLL** to commit.
+
+### Target Number (d100 only)
+
+When the formula resolves to a single `d100` with no modifier, a **Target Number** toggle appears. Enable it and type the skill percentage you're rolling against — the result card then shows:
+
+| Tone | When |
+|---|---|
+| **CRITICAL** (blue) | Roll of 01 or matched digits (11, 22, …) at or below target |
+| **PASS** (green) | Roll is at or below target |
+| **FAIL** (red) | Roll is above target |
+| **FUMBLE** (red) | Roll of 100 or matched digits over 5 above target |
+
+Same rules as the inline per-skill roller — just with an arbitrary target.
 
 ### The visual roll
-When you hit ROLL, a 3D dice animation takes over the viewport. Dice physically tumble, bounce off each other, and settle — it takes about 2–3 seconds. The result is shown in a centered card over the dice, then clears automatically after another 2 seconds.
 
-Dice colours follow the active palette: ink-on-manila by default; greenscreen dice in FIELD mode; lighter paper in BONE.
+Click ROLL → the panel auto-hides, 3D dice tumble across the full viewport, physics sim resolves in 2–3 s, and a centered result card appears. The card lingers for ~2.5 s, then dice + card clear and the panel slides back in.
 
-### What gets logged
-Every roll from the global roller writes an entry to the **active character's** session log (Notes tab) tagged with a blue **ROLL** badge. Example log entries:
+### Recent rolls history
+
+The last 10 rolls of the session appear below Advanced Roll: formula, total, per-die breakdown, and the d100 tone tag if applicable. Session-local — refreshing the page clears it. A **Clear** button empties the list manually.
+
+### Dice settings (⚙)
+
+The gear icon in the panel header opens **Dice Settings**. Each option persists per device (IndexedDB) and applies on the next roll.
+
+- **Dice Size** — Small / Medium / Large / X-Large. How big the dice render.
+- **Dice Style** — four themes, each with its own font and material:
+  - **Paper** (default) — Manila paper, typewriter numerals
+  - **Smooth** — Rounded edges, clean modern font
+  - **Rust** — Weathered metal, distressed face
+  - **Classic** — Traditional multicolor RPG set
+- **Dice Color** — *Match UI theme* (follows MANILA / BONE / FIELD) or *Custom* with a native color picker.
+- **Shadows** — soft shadows under the dice; toggle off for a cleaner look or slight perf benefit on older devices.
+- **Restore defaults** at the bottom resets all four.
+
+### Session log integration
+
+Every global roll writes an entry to the active character's session log with a blue **ROLL** badge. Example labels:
 
 - `Roll d20 = 14`
 - `Roll 2d6+3 = 4, 3 +3 → 10`
-- `Roll d100 vs 45 → 37 PASS`
+- `Roll d100 vs 45% → 37 PASS`
 
-The inline per-skill dice rollers on the Skills tab are unaffected — they continue to work and log as before.
+The inline per-skill dice rollers on the Skills tab are unaffected — they continue to work and log the same way they always have.
 
 ### Limitations
+
 - The global roller requires a character to be open. It's hidden on the Roster / Wizard screens.
-- Roll history is **per session** — refreshing the page clears it. (The per-character session log, however, is persistent across sessions.)
-- Modifiers must be additive/subtractive numbers (`+3`, `-2`). Advanced notation (drop-lowest, advantage) isn't supported — Delta Green doesn't use those mechanics.
-- Future: when campaign mode ships, Handler will get a real-time feed of players' rolls (their own rolls stay private).
+- Roll history is **per session** — refreshing clears it. (The per-character session log is persistent across sessions.)
+- Modifiers must be flat numbers (`+3`, `−2`). Advanced notation like drop-lowest or advantage isn't supported — Delta Green doesn't use those.
+- **Coming later**: when Campaign / Handler mode ships, non-private rolls broadcast to the campaign feed in real time, while Handler rolls stay private.
 
 ---
 

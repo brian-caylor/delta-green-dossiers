@@ -1,5 +1,7 @@
 # Delta Green — Agent Dossiers
 
+*Last updated: 2026-04-20 · see [CHANGELOG.md](CHANGELOG.md) for a user-facing history of changes.*
+
 A Progressive Web App for creating and managing [Delta Green](https://www.delta-green.com/) RPG character sheets. Sign in with Google, build your agents, track sanity, roll dice, run missions. Cloud-synced across devices, and still usable when the signal drops.
 
 ## For players
@@ -47,6 +49,14 @@ A tab-based digital character sheet that works on phones, tablets, and desktops.
 - FIELD (greenscreen retro terminal)
 - Choice persists per device
 
+**Global visual dice roller**
+- ⚄ icon in the top bar opens a floating panel
+- Basic (one-click d4 / d6 / d8 / d10 / d12 / d20 / d100) + Advanced (count × die ± modifier, optional Target% for d100 skill checks)
+- Physics-based 3D animation across the viewport via [@3d-dice/dice-box](https://www.npmjs.com/package/@3d-dice/dice-box)
+- Four switchable dice themes (Paper, Smooth, Rust, Classic) — each with its own font and material
+- Per-device settings: size, style, color, shadows
+- Every roll logs to the active character's session log with a `ROLL` badge
+
 **Offline behaviour**
 - Works offline for reading existing characters (cached in IndexedDB)
 - Red banner appears the moment writes can't reach Firestore; edits are blocked so nothing gets silently lost
@@ -62,6 +72,7 @@ A tab-based digital character sheet that works on phones, tablets, and desktops.
 | Database | Firestore (one `characters` doc per agent, JSONB-style shape) |
 | Local cache | `idb-keyval` for the per-user read cache |
 | Hosting | Netlify (app) + Firebase Hosting (auth handler endpoints only) |
+| Dice | `@3d-dice/dice-box` (Babylon.js + Ammo.js, lazy-loaded chunk) |
 | PDF parsing | PDF.js (loaded from CDN on first import) |
 | Fonts | Special Elite, IBM Plex Sans, IBM Plex Mono |
 
@@ -79,10 +90,12 @@ src/
     LoginScreen    # Manila-paper login gate with Google sign-in
     Roster         # Post-login grid of character cards
     Wizard         # 6-step guided induction
-  hooks/           # useCharacters (cloud-first with IDB cache), useAuth, useTheme, useModals, useDragAndDrop, useImport, usePwaInstall
-  lib/             # firebase.js, charactersRepo.js, cache.js, AuthContext
+    DiceRollerProvider # Global dice context; mounts the overlay + panel
+    dice/          # DiceRollerPanel, DiceOverlay, DiceButton, DiceIcons, DiceSettings
+  hooks/           # useCharacters, useAuth, useTheme, useDiceSettings, useDiceRoller, useModals, useDragAndDrop, useImport, usePwaInstall
+  lib/             # firebase.js, charactersRepo.js, cache.js, diceBox.js, AuthContext, DiceRollerContext
   data/            # Default character template, skills, gear catalog, disorders
-  utils/           # Dice roller, stat derivation, PDF parser, print styling, UUID, text helpers
+  utils/           # Dice math (rollFormula, parseFormula), stat derivation, PDF parser, print styling, UUID, text helpers
   styles/          # tokens.css (palette variables) + components.css (primitive classes)
 ```
 

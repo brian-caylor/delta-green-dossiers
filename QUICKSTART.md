@@ -1,5 +1,7 @@
 # Delta Green Dossiers — Quick Start
 
+*Last updated: 2026-04-20 · [What's new](CHANGELOG.md)*
+
 Hey — thanks for jumping in. This is a web-based character sheet for our
 Delta Green games. Works on phones, tablets, laptops. Your sheets sync to
 the cloud so you can hop between devices.
@@ -64,6 +66,13 @@ Five tabs across the top:
 - **Theme switcher**: top bar has **MANILA / BONE / FIELD**. FIELD is
   the retro terminal green thing. Bone is for printing. Pick whichever.
   Your choice sticks per device.
+- **Global dice roller** (⚄ in the top bar): opens a panel with 7
+  clickable dice (d4 → d100) for one-click rolls, plus an Advanced
+  section for *count × die + modifier* with an optional Target% for
+  d100 skill checks. Dice physically tumble across the screen and
+  settle on a result. The ⚙ inside the panel lets you customize size,
+  dice style (4 themes, different fonts), color, and shadows — all
+  saved to your device.
 
 ## Stuff that'll save you pain
 
