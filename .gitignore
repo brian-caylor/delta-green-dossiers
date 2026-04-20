@@ -17,6 +17,9 @@ dist-ssr
 # Firebase CLI local cache
 .firebase/
 
+# Local-only troubleshooting notes
+TROUBLESHOOTING.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
