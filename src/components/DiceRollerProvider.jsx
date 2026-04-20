@@ -40,26 +40,26 @@ export default function DiceRollerProvider({ onRoll, children }) {
     if (!result) return null;
 
     const entry = { ...result, at: Date.now(), id: cryptoRandomId() };
-    setActiveRoll(entry);
     animatingRef.current = true;
 
-    // Fire the consumer callback (session log write) immediately so it
-    // lands in Firestore without waiting for the animation to settle.
+    // Log to the session log immediately — don't block persistence on the
+    // animation.
     if (onRoll) {
       try { onRoll(entry); } catch (err) { console.error("[dice] onRoll hook failed", err); }
     }
 
-    // Drive the animation. If the library can't init (no WebGL, asset
-    // load failure, etc.) we still show the result — just without 3D.
+    // Let the dice tumble first; reveal the result card only once they
+    // settle (or once we confirm the animation isn't going to play).
     try {
       await animate(result.formula);
     } catch (err) {
-      console.warn("[dice] animation skipped:", err?.message || err);
+      console.warn("[dice] animation skipped — falling back to numeric result:", err?.message || err);
     }
 
+    setActiveRoll(entry);
     setHistory((prev) => [entry, ...prev].slice(0, 10));
 
-    // Keep the result visible a beat after settling.
+    // Keep the result visible a beat before clearing the scene.
     setTimeout(() => {
       setActiveRoll(null);
       clearScene().catch(() => { /* noop */ });

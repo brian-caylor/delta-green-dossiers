@@ -1,23 +1,21 @@
 // Thin wrapper over @3d-dice/dice-box.
 //
-// - The library is dynamically imported on first use so it ends up in its
-//   own chunk and never ships to users who don't open the roller.
-// - We maintain a single DiceBox instance keyed to a DOM container
-//   (#dice-box-root). The library owns its canvas imperatively; we just
-//   ensure one mount point.
-// - `rollFormula` in src/utils/diceRoller.js is the canonical source of
-//   truth for dice values. The library's onRollComplete is used only for
-//   "animation finished" signalling — we don't read its values.
+// - Dynamically imported on first roll so the ~400 KB library ships in
+//   its own chunk and is lazy-loaded.
+// - One DiceBox instance per page, attached to #dice-box-root.
+// - rollFormula() in src/utils/diceRoller.js owns the canonical values;
+//   the library is purely visual.
 
-let instance = null;       // DiceBox instance once initialised
-let initPromise = null;    // in-flight init so concurrent callers share it
-let currentTheme = null;   // the theme key we last configured
+let instance = null;
+let initPromise = null;
+let currentTheme = null;
 
-const THEME_CONFIG = {
-  // Hexes without the # prefix — dice-box wants them that way.
-  manila:      { themeColor: "#e8e0cf", diceColor: "#e8e0cf", textColor: "#1a1712", outlineColor: "#1a1712" },
-  bone:        { themeColor: "#f5f1e8", diceColor: "#f5f1e8", textColor: "#1a1712", outlineColor: "#1a1712" },
-  greenscreen: { themeColor: "#0f1a10", diceColor: "#142014", textColor: "#a8ff9a", outlineColor: "#a8ff9a" },
+// Per-palette dice colours. themeColor overrides the material's base hue
+// while the default theme textures handle the highlights / numbers.
+const THEME_COLOR = {
+  manila:      "#d9cdaa",
+  bone:        "#e8e0cf",
+  greenscreen: "#35552e",
 };
 
 function detectTheme() {
@@ -33,59 +31,58 @@ async function ensureInstance() {
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
-    const { default: DiceBox } = await import("@3d-dice/dice-box");
-    // Ensure the DOM container exists at a stable selector so the canvas
-    // can attach to it. DiceRollerProvider mounts this <div> for us.
+    const mod = await import("@3d-dice/dice-box");
+    const DiceBox = mod.default;
+
     const container = document.getElementById("dice-box-root");
-    if (!container) throw new Error("#dice-box-root not mounted");
+    if (!container) throw new Error("#dice-box-root is not in the DOM");
+    if (container.clientWidth === 0 || container.clientHeight === 0) {
+      throw new Error("dice-box container has zero dimensions");
+    }
 
     currentTheme = detectTheme();
-    const theme = THEME_CONFIG[currentTheme];
 
     const box = new DiceBox({
       container: "#dice-box-root",
       assetPath: "/assets/dice-box/",
-      scale: 7,
-      gravity: 1.5,
-      mass: 1,
-      friction: 0.8,
-      restitution: 0.2,
-      linearDamping: 0.4,
-      angularDamping: 0.4,
-      spinForce: 5,
-      throwForce: 4,
-      startingHeight: 10,
-      settleTimeout: 4000,
-      offscreen: true,
-      delay: 10,
       theme: "default",
-      themeColor: theme.themeColor,
+      themeColor: THEME_COLOR[currentTheme],
+      // Defaults for everything else — physics tuning is only worth
+      // doing if we hit a real problem. Custom values were throwing or
+      // pushing dice off-screen in v1.
     });
 
-    await box.init();
+    try {
+      await box.init();
+    } catch (err) {
+      // Surface the actual reason so we can diagnose; still re-throw so
+      // the provider's outer try/catch can fall back to showing just
+      // the numeric result.
+      console.error("[dice] DiceBox init failed:", err);
+      throw err;
+    }
+
     instance = box;
     return box;
   })();
 
+  // If init fails, let the next call retry instead of being stuck.
+  initPromise.catch(() => { initPromise = null; });
+
   return initPromise;
 }
 
-// Roll using dice-box notation. The promise resolves once the animation
-// settles. We don't rely on the returned values for correctness — the
-// caller has already computed them via rollFormula() and uses those.
+// Kick off the animation for a formula. Resolves when dice settle.
 export async function animate(formula) {
   const box = await ensureInstance();
 
-  // Sync theme if the user has switched palettes since init.
+  // Re-theme if the palette changed since init.
   const newTheme = detectTheme();
-  if (newTheme !== currentTheme) {
-    const theme = THEME_CONFIG[newTheme];
+  if (newTheme !== currentTheme && box.updateConfig) {
     try {
-      box.updateConfig({ themeColor: theme.themeColor });
+      box.updateConfig({ themeColor: THEME_COLOR[newTheme] });
       currentTheme = newTheme;
-    } catch {
-      // updateConfig may not exist in all versions — safe to ignore.
-    }
+    } catch { /* noop */ }
   }
 
   return box.roll(formula);
@@ -96,12 +93,6 @@ export async function clearScene() {
   try { instance.clear(); } catch { /* noop */ }
 }
 
-// Stop listening / free resources. Currently unused; reserved for when
-// the provider unmounts (e.g. user signs out).
-export async function disposeBox() {
-  if (!instance) return;
-  try { instance.clear(); } catch { /* noop */ }
-  instance = null;
-  initPromise = null;
-  currentTheme = null;
+export function isAvailable() {
+  return !!instance;
 }
