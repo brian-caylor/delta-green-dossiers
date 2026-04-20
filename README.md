@@ -1,90 +1,108 @@
-# Delta Green -- Agent Dossiers
+# Delta Green — Agent Dossiers
 
-A Progressive Web App for creating and managing [Delta Green](https://www.delta-green.com/) RPG character sheets. Build your agents, track sanity, roll dice, and run missions -- all from your browser, even offline.
+A Progressive Web App for creating and managing [Delta Green](https://www.delta-green.com/) RPG character sheets. Sign in with Google, build your agents, track sanity, roll dice, run missions. Cloud-synced across devices, and still usable when the signal drops.
 
-## What It Does
+## For players
 
-Delta Green -- Agent Dossiers digitizes the full Delta Green character sheet into a tab-based interface that works on phones, tablets, and desktops. All data is stored locally in IndexedDB -- nothing leaves your device.
+If you just want to play: see [QUICKSTART.md](QUICKSTART.md). Hit
+**https://dgfieldguide.oddlyuseful.app**, sign in with Google, and you're off.
 
-**Character Management**
-- Create, duplicate, and manage multiple agents
+## What it does
+
+A tab-based digital character sheet that works on phones, tablets, and desktops. Each player's agents live in Firestore under their Google account, so you can close the tab on your laptop and pick up on your phone with the same roster.
+
+**Character management**
+- Create agents via a guided Wizard or drop into a blank sheet
+- Duplicate, print, export (JSON), import (PDF or JSON), delete
 - Drag-and-drop reordering in the sidebar
-- Mark agents KIA (locks fields, redacts personal data)
-- Import characters from official Delta Green fillable PDFs
-- Export/import character backups as JSON
+- Mark agents KIA (locks fields, redacts personal data, sets a big red stamp); revivable if the GM has mercy
 
-**Stats & Skills**
-- 6 core stats (STR, CON, DEX, INT, POW, CHA) with derived attributes (HP, WP, SAN, BP)
-- Auto-calculated derived values that stay in sync with base stats
-- 40+ pre-loaded skills with correct base percentages
-- Specializations for Art, Craft, Military Science, Pilot, and Science
-- Up to 6 custom skills (Foreign Languages and Other)
-- Inline d100 roller with critical/fumble detection (doubles logic)
+**Stats & skills**
+- 6 core stats (STR, CON, DEX, INT, POW, CHA) with derived HP / WP / SAN / BP
+- Derived maxes auto-calculate: `HP max = ceil((STR+CON)/2)`, `WP max = POW`, `SAN max = min(POW×5, 99−Unnatural)`
+- 40+ pre-loaded skills with correct base percentages, specializations for Art / Craft / Military Science / Pilot / Science
+- 6 custom skill slots (languages or anything else)
+- Inline d100 roller per skill with critical / fumble / pass / fail detection (doubles logic)
 
-**Sanity System**
-- Full SAN event flow with reaction choices (Repress, Flee, Struggle, Submit)
-- Breaking point tracking and automatic disorder assignment
-- SAN ceiling enforcement: min(POW x 5, 99 - Unnatural%)
-- Violence and Helplessness adaptation tracking (3-box system)
-- Temporary insanity state management
-
-**Bonds**
-- Up to 5 bonds (expandable), auto-populated from CHA
-- Score tracking with visual progress bars
-- SAN projection via bond sacrifice with WP damage rolls
+**Sanity system**
+- Full SAN event flow fires when current SAN drops: category select → temp insanity reaction (repress / flee / struggle / submit) → breaking point → adaptation tracking → permanent insanity at 0
+- SAN ceiling enforcement as Unnatural encounters accrue
+- Violence and Helplessness adaptation tracked as 3-box sets with "Adapted" flags
+- Bond projection modal (Stats tab) for sacrificing bond score + WP to absorb SAN loss
 
 **Combat**
-- Quick-reference panel showing HP, WP, SAN, and key skill percentages
-- Weapon management with full stat tracking (damage, AP, lethality, kill radius, ammo)
-- Built-in gear catalog with 50+ weapons across 9 categories
-- First aid and wound tracking
+- Quick-reference panel: HP, WP, SAN, plus the four combat skill percentages, pinned at the top of the tab
+- Weapon table / mobile cards with ammo counter, AP flag, lethality %, kill radius
+- 50+ weapon gear catalog across 9 categories for fast-add
+- Wounds field + "First Aid attempted" flag + armor-and-gear notes
 
-**Session Tracking**
-- Timestamped session log records all meaningful changes
-- End Mission handler rolls 1d4 for each failed skill (advancement system)
-- Notes tab for freeform session notes
+**Session tracking**
+- Timestamped session log captures every stat change, roll outcome, bond event, SAN event, advancement, KIA event
+- End-of-mission advancement rolls 1d4 on every failed skill at once
+- Export log as JSON or print a formatted report
 
-**Offline & Installable**
-- Service worker caches all assets for full offline use
-- Installable as a PWA on mobile and desktop
-- Automatic background updates when new versions deploy
+**Three-palette UI**
+- MANILA (default dossier paper)
+- BONE (clean white, print-friendly)
+- FIELD (greenscreen retro terminal)
+- Choice persists per device
 
-## Tech Stack
+**Offline behaviour**
+- Works offline for reading existing characters (cached in IndexedDB)
+- Red banner appears the moment writes can't reach Firestore; edits are blocked so nothing gets silently lost
+- When you reconnect, the roster refetches and sync resumes
+
+## Tech stack
 
 | Layer | Tech |
 |---|---|
-| UI | React 19, plain CSS |
-| Build | Vite 7 |
-| Persistence | IndexedDB via `idb-keyval` |
-| PWA | `vite-plugin-pwa` + Workbox |
-| PDF Parsing | PDF.js (loaded from CDN on first import) |
+| UI | React 19, plain CSS with design tokens (no framework) |
+| Build | Vite 7, vite-plugin-pwa + Workbox |
+| Auth | Firebase Auth (Google sign-in via popup) |
+| Database | Firestore (one `characters` doc per agent, JSONB-style shape) |
+| Local cache | `idb-keyval` for the per-user read cache |
+| Hosting | Netlify (app) + Firebase Hosting (auth handler endpoints only) |
+| PDF parsing | PDF.js (loaded from CDN on first import) |
 | Fonts | Special Elite, IBM Plex Sans, IBM Plex Mono |
 
-No backend. No accounts. No telemetry. Just a static site with local storage.
+Security model: Firestore security rules enforce per-user access — a user can only read/write their own character docs. See [firestore.rules](firestore.rules). A future Handler / Campaign mode is intentionally accommodated by the schema (nullable `campaign_id`) but not implemented yet.
 
-## Project Structure
+## Project structure
 
 ```
 src/
   components/
-    tabs/         # 5 main views: Personal, Stats, Skills, Combat, Notes
-    modals/       # SAN events, bond projection, mission end, import, gear catalog
-    ui/           # Reusable inputs, stat bars, collapsible sections, KIA banner
-  hooks/          # State management, IndexedDB sync, import logic, drag-and-drop
-  data/           # Game data: default character template, skills, gear catalog, disorders
-  utils/          # Dice roller, stat derivation, PDF parser, print styling, text helpers
+    tabs/          # 5 main views: Personal, Stats, Skills, Combat, Notes
+    modals/        # SAN events, bond projection, mission end, import, gear catalog
+    ui/            # Primitives: SheetBox, Pip, Stepper, Stamp, Check, ThemeSwitcher, TopBar, KIABanner, etc.
+    AuthProvider   # Firebase auth context + sign-in state
+    LoginScreen    # Manila-paper login gate with Google sign-in
+    Roster         # Post-login grid of character cards
+    Wizard         # 6-step guided induction
+  hooks/           # useCharacters (cloud-first with IDB cache), useAuth, useTheme, useModals, useDragAndDrop, useImport, usePwaInstall
+  lib/             # firebase.js, charactersRepo.js, cache.js, AuthContext
+  data/            # Default character template, skills, gear catalog, disorders
+  utils/           # Dice roller, stat derivation, PDF parser, print styling, UUID, text helpers
+  styles/          # tokens.css (palette variables) + components.css (primitive classes)
 ```
 
-## Getting Started
+## Getting started (development)
 
 ```bash
 npm install
-npm run dev
+cp .env.example .env.local     # fill in the six VITE_FIREBASE_* values
+npm run dev                     # http://localhost:5173
 ```
 
-Open `http://localhost:5173`. Click **+ New Agent** in the sidebar to create your first dossier.
+You'll need a Firebase project with:
+- **Authentication → Google provider** enabled
+- **Authentication → Authorized domains** including `localhost` and whatever hostname you deploy to
+- **Firestore database** created (production mode)
+- **Firestore rules** published (copy [firestore.rules](firestore.rules))
+- **Firestore indexes** published (`firebase deploy --only firestore:indexes` or add manually — one composite on `characters.userId` ASC + `updatedAt` DESC)
+- **Firebase Hosting** enabled (deploy anything once via `firebase deploy --only hosting`) — this provisions the `<project>.firebaseapp.com/__/firebase/init.json` endpoint that the Auth popup needs
 
-### Other Commands
+### Other commands
 
 ```bash
 npm run build     # Production build to dist/
@@ -94,16 +112,18 @@ npm run lint      # Run ESLint
 
 ## Deployment
 
-The build output is a static site (`dist/`). Deploy to any static host -- Netlify, Vercel, GitHub Pages, Cloudflare Pages, etc. The service worker handles offline caching automatically.
+Build output is a static site. Netlify handles production; `netlify.toml` covers build settings, SPA fallback, and proxy routes for the Firebase auth handler. Any `VITE_FIREBASE_*` env vars need to be configured in **Netlify → Site configuration → Environment variables** with scope=Builds and contexts=All. Pushes to `main` auto-deploy production; pushes to other branches get branch previews.
 
-## PDF Import
+Rolling back a bad deploy is fastest from **Netlify → Deploys → (previous green deploy) → Publish deploy**.
 
-Supports importing from the official Delta Green fillable character sheet PDF. The parser maps PDF form fields to the app's data model, covering personal info, stats, skills, bonds, and weapons. You can review all imported data before confirming.
+## PDF import
+
+Supports importing from the official Delta Green fillable character sheet PDF. The parser maps PDF form fields to the app's data model (personal info, stats, skills, bonds, weapons). All imported data is previewed for review before committing.
 
 ## Print
 
-Use the browser's print function (Ctrl/Cmd+P) to generate a formatted dossier. The app applies print-specific CSS to produce a clean, readable output.
+Every agent has a print button in the sidebar and a separate session-log print in the Notes tab. Both open a cleanly-formatted preview window with a dark top bar for the Print/Close controls and manila paper below. The print palette is fixed — greenscreen or bone UI themes don't leak into the output.
 
 ## License
 
-This project is a fan-made tool for the Delta Green RPG. Delta Green is the intellectual property of Arc Dream Publishing.
+Fan-made tool for the Delta Green RPG. Delta Green is the intellectual property of Arc Dream Publishing.
