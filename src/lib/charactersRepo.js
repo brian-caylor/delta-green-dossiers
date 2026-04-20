@@ -1,6 +1,7 @@
 import {
   collection, doc, query, where, orderBy,
   getDocs, setDoc, deleteDoc, serverTimestamp,
+  waitForPendingWrites,
 } from "firebase/firestore";
 import { db } from "./firebase.js";
 import { charName } from "../utils/textHelpers.js";
@@ -72,5 +73,27 @@ export async function deleteCharacter(id) {
     return { error: null };
   } catch (error) {
     return { error };
+  }
+}
+
+// Check whether the Firestore SDK has actually flushed recent writes to
+// the server. setDoc / deleteDoc resolve as soon as their ops are queued
+// locally, which happens instantly even while offline — so we can't use
+// those promises to detect connectivity. waitForPendingWrites only resolves
+// once every pending op has reached the server. If it's still pending
+// after `timeoutMs`, we treat the cloud as unreachable.
+export async function flushOrDetectOffline(timeoutMs = 5000) {
+  let timer;
+  const timeoutPromise = new Promise((resolve) => {
+    timer = setTimeout(() => resolve({ flushed: false }), timeoutMs);
+  });
+  try {
+    const result = await Promise.race([
+      waitForPendingWrites(db).then(() => ({ flushed: true })),
+      timeoutPromise,
+    ]);
+    return result;
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }

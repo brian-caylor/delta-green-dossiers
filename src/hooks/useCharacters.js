@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useAuth } from "./useAuth.js";
-import { listCharacters, upsertCharacter, deleteCharacter } from "../lib/charactersRepo.js";
+import { listCharacters, upsertCharacter, deleteCharacter, flushOrDetectOffline } from "../lib/charactersRepo.js";
 import { readCache, writeCache } from "../lib/cache.js";
 
 // Cloud-first characters hook with a per-user IndexedDB read cache.
@@ -182,8 +182,20 @@ export function useCharacters() {
       return;
     }
 
+    // Firestore resolves setDoc/deleteDoc the moment they're queued locally,
+    // which succeeds even while offline. Check that the queue actually
+    // reached the server before marking the save successful. Timeout here
+    // is our real "offline" signal.
+    const flush = await flushOrDetectOffline(5000);
+    if (!flush.flushed) {
+      setCloudReachable(false);
+      setStorageError("Offline — cloud unreachable. Your recent changes are queued locally but not saved.");
+      return;
+    }
+
     syncedRef.current = new Map(chars.map(c => [c.id, c]));
     await writeCache(userId, chars, aid);
+    setCloudReachable(true);
     setStorageError(null);
   }, [userId, readOnly]);
 
