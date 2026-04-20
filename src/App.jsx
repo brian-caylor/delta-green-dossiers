@@ -31,6 +31,10 @@ import { ImportReviewModal, SessionEndModal, SanEventModal, SanProjectionModal, 
 import { useAuth } from "./hooks/useAuth.js";
 import LoginScreen from "./components/LoginScreen.jsx";
 
+// ─── Screens ───
+import Roster from "./components/Roster.jsx";
+import Wizard from "./components/Wizard.jsx";
+
 // ─── Main entry: auth gate, then dossier app ───
 export default function App() {
   const { user, loading } = useAuth();
@@ -46,6 +50,11 @@ export default function App() {
 }
 
 function DossierApp() {
+  // Discriminated screen state. Default landing after login is the Roster.
+  // Shapes: { screen: 'roster' } | { screen: 'wizard' } | { screen: 'sheet', characterId }
+  // [FWD-COMPAT] future campaign screens drop in as additional discriminants.
+  const [view, setView] = useState({ screen: "roster" });
+
   const [tab, setTab] = useState("stats");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showRedactions, setShowRedactions] = useState(true);
@@ -95,12 +104,34 @@ function DossierApp() {
   const isRedacted = isKIA && showRedactions;
   const isLocked = isKIA;
 
+  // ─── Navigation helpers ───
+  const showRoster = () => setView({ screen: "roster" });
+  const showWizard = () => setView({ screen: "wizard" });
+  const openSheet = (id) => { setActiveId(id); setTab("stats"); setView({ screen: "sheet", characterId: id }); };
+
+  // When user presses +NEW AGENT in sidebar, still produce a blank character
+  // and jump straight to the sheet (legacy behaviour). Roster's +NEW AGENT
+  // button routes through the wizard instead.
+  const quickNewCharacter = () => {
+    const c = createNewCharacter();
+    setCharacters(prev => [...prev, c]);
+    openSheet(c.id);
+  };
+
+  // Wizard output: commit the fully-built character to the cloud.
+  const commitCharacterFromWizard = (c) => {
+    setCharacters(prev => [...prev, c]);
+  };
+
   // ─── Game mechanics handlers ───
+  // Blank add — sidebar +NEW AGENT button. Creates an empty dossier and
+  // opens the sheet directly. Roster "+NEW AGENT" routes through the wizard.
   const addCharacter = () => {
     const c = createNewCharacter();
     setCharacters(prev => [...prev, c]);
     setActiveId(c.id);
     setTab("personal");
+    setView({ screen: "sheet", characterId: c.id });
   };
 
   const deleteCharacter = (id) => {
@@ -113,7 +144,11 @@ function DossierApp() {
       onConfirm: () => {
         setCharacters(prev => {
           const next = prev.filter(ch => ch.id !== id);
-          if (activeId === id) setActiveId(next[0]?.id || null);
+          if (activeId === id) {
+            setActiveId(null);
+            // Kick back to the roster when deleting the open character.
+            setView({ screen: "roster" });
+          }
           return next;
         });
         setConfirmDialog(null);
@@ -581,6 +616,31 @@ function DossierApp() {
         </div>
       )}
 
+      {/* ─── Roster screen ─── */}
+      {view.screen === "roster" && (
+        <Roster
+          characters={characters}
+          onOpen={openSheet}
+          onNew={showWizard}
+          onImport={() => setImportChoiceOpen(true)}
+          onDuplicate={(id) => { duplicateCharacter(id); }}
+          onBackup={backupCharacter}
+          onDelete={deleteCharacter}
+        />
+      )}
+
+      {/* ─── Wizard screen ─── */}
+      {view.screen === "wizard" && (
+        <Wizard
+          onCancel={showRoster}
+          onCommit={commitCharacterFromWizard}
+          onCreated={(id) => openSheet(id)}
+        />
+      )}
+
+      {/* ─── Sheet screen: sidebar + tabs (legacy shell) ─── */}
+      {view.screen === "sheet" && (
+      <>
       {/* Mobile sidebar backdrop */}
       {isMobile && sidebarOpen && (
         <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 49 }} />
@@ -618,10 +678,11 @@ function DossierApp() {
             {sidebarOpen ? "◁" : "▷"}
           </button>
           {sidebarOpen && (
-            <div>
+            <button type="button" onClick={showRoster} title="Back to roster"
+              style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer" }}>
               <div className="handwritten" style={{ fontSize: 16, letterSpacing: 3, color: "var(--ink)" }}>DELTA GREEN</div>
-              <div className="label" style={{ marginTop: 2 }}>AGENT DOSSIERS</div>
-            </div>
+              <div className="label" style={{ marginTop: 2 }}>◁ AGENT ROSTER</div>
+            </button>
           )}
         </div>
         {sidebarOpen && (
@@ -779,6 +840,8 @@ function DossierApp() {
           </>
         )}
       </div>
+      </>
+      )}
       </div>
     </div>
   );
