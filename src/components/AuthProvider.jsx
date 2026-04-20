@@ -16,45 +16,48 @@ export default function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let resolved = false;
-    const resolveOnce = (u) => {
-      if (resolved) return;
-      resolved = true;
-      setUser(u ?? null);
-      setLoading(false);
-    };
+    let firstResolve = false;
 
     const unsub = onAuthStateChanged(
       auth,
       (u) => {
         console.log("[auth] state changed", { hasUser: !!u, uid: u?.uid });
-        resolveOnce(u);
+        // Always mirror every auth state change into React — sign-in AFTER
+        // the initial null must propagate too.
+        setUser(u ?? null);
+        if (!firstResolve) {
+          firstResolve = true;
+          setLoading(false);
+        }
       },
       (err) => {
         console.error("[auth] listener error:", err);
-        resolveOnce(null);
+        if (!firstResolve) {
+          firstResolve = true;
+          setLoading(false);
+        }
       },
     );
 
     const timeout = setTimeout(() => {
-      if (!resolved) {
+      if (!firstResolve) {
         console.warn(`[auth] init timed out after ${AUTH_INIT_TIMEOUT_MS}ms; unblocking UI`);
-        resolveOnce(null);
+        firstResolve = true;
+        setLoading(false);
       }
     }, AUTH_INIT_TIMEOUT_MS);
 
     return () => { clearTimeout(timeout); unsub(); };
   }, []);
 
-  // Popup flow. The COOP warnings seen in console (about window.closed) are
-  // cosmetic in modern Firebase SDK: the popup still completes, auth state
-  // lands in IndexedDB, and onAuthStateChanged fires with the new user.
+  // Popup flow. The COOP warnings seen in console (about window.close) are
+  // cosmetic: auth still completes and onAuthStateChanged fires above.
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       if (err?.code === "auth/popup-closed-by-user" || err?.code === "auth/cancelled-popup-request") {
-        return; // user cancelled; don't surface as error
+        return;
       }
       throw err;
     }
