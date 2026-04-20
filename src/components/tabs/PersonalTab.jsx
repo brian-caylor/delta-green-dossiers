@@ -15,7 +15,6 @@ export const PersonalTab = memo(function PersonalTab({ activeChar, isKIA, isLock
       const bonds = [...c.bonds];
       const old = bonds[i];
       const update = { ...old, name: v };
-      // Auto-fill score from CHA when name goes from empty to non-empty and score is still empty
       if (!old.name && v.trim() && (old.score === "" || old.score === null || old.score === undefined)) {
         const cha = Number(c.stats?.cha?.score) || 0;
         if (cha > 0) { update.score = cha; update.scoreMax = cha; }
@@ -50,10 +49,12 @@ export const PersonalTab = memo(function PersonalTab({ activeChar, isKIA, isLock
   const totalUnnatural = encounters.reduce((sum, e) => sum + (Number(e.pts) || 0), 0);
   const sanMaxCeiling = Math.max(0, 99 - totalUnnatural);
 
+  const kiaStyle = isKIA ? { color: "var(--redact)" } : {};
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="col" style={{ gap: 24 }}>
       <CollapsibleSection icon="01" title="Personal Data">
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="col" style={{ gap: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr 60px" : "1fr 1fr 80px", gap: isMobile ? 8 : 12 }}>
             <Field label="Last Name" value={activeChar.personal.lastName} disabled={isLocked} redacted={isRedacted} seed={3} onChange={v => updatePersonal("lastName", v)} />
             <Field label="First Name" value={activeChar.personal.firstName} disabled={isLocked} redacted={isRedacted} seed={7} onChange={v => updatePersonal("firstName", v)} />
@@ -66,18 +67,29 @@ export const PersonalTab = memo(function PersonalTab({ activeChar, isKIA, isLock
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 120px 120px 120px", gap: isMobile ? 8 : 12 }}>
             <Field label="Nationality" value={activeChar.personal.nationality} disabled={isLocked} onChange={v => updatePersonal("nationality", v)} />
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <label style={{ fontSize: 10, fontFamily: "'Special Elite', cursive", letterSpacing: 1.5, textTransform: "uppercase", color: "#7A8A60" }}>Sex</label>
-              <div style={{ display: "flex", gap: 8, paddingTop: 4 }}>
-                {["M", "F", "—"].map(s => (
-                  <label key={s} style={{ display: "flex", alignItems: "center", gap: 4, cursor: isLocked ? "not-allowed" : "pointer", color: activeChar.personal.sex === s ? (isKIA ? "#884040" : "#8BA069") : "#5A6A40", fontSize: 13, fontFamily: "'Special Elite', cursive", opacity: isLocked ? 0.6 : 1 }}>
-                    <div onClick={() => !isLocked && updatePersonal("sex", s)} style={{
-                      width: 16, height: 16, border: `1.5px solid ${activeChar.personal.sex === s ? (isKIA ? "#884040" : "#8BA069") : "rgba(139,160,105,0.3)"}`,
-                      borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
-                      background: activeChar.personal.sex === s ? (isKIA ? "rgba(140,50,50,0.2)" : "rgba(139,160,105,0.2)") : "transparent", cursor: isLocked ? "not-allowed" : "pointer",
-                    }}>{activeChar.personal.sex === s && <div style={{ width: 6, height: 6, borderRadius: "50%", background: isKIA ? "#884040" : "#8BA069" }} />}</div>
-                    {s}
-                  </label>
-                ))}
+              <label className="label">Sex</label>
+              <div style={{ display: "flex", gap: 10, paddingTop: 4 }}>
+                {["M", "F", "—"].map(s => {
+                  const checked = activeChar.personal.sex === s;
+                  return (
+                    <label key={s} style={{ display: "flex", alignItems: "center", gap: 6, cursor: isLocked ? "not-allowed" : "pointer", fontFamily: "var(--font-hand)", fontSize: 14, color: "var(--ink)", opacity: isLocked ? 0.5 : 1, ...kiaStyle }}>
+                      <span
+                        onClick={() => !isLocked && updatePersonal("sex", s)}
+                        style={{
+                          width: 16, height: 16,
+                          border: `1.5px solid ${checked ? "var(--ink)" : "var(--ink-muted)"}`,
+                          borderRadius: "50%",
+                          display: "inline-flex", alignItems: "center", justifyContent: "center",
+                          background: checked ? "var(--ink)" : "transparent",
+                          cursor: isLocked ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {checked && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--paper)" }} />}
+                      </span>
+                      {s}
+                    </label>
+                  );
+                })}
               </div>
             </div>
             <Field label="Age" value={activeChar.personal.age} disabled={isLocked} onChange={v => updatePersonal("age", v)} />
@@ -89,66 +101,57 @@ export const PersonalTab = memo(function PersonalTab({ activeChar, isKIA, isLock
       </CollapsibleSection>
 
       <CollapsibleSection icon="02" title="Bonds" headerExtra={
-        <span style={{ fontSize: 10, color: "#5A6A40", fontStyle: "italic", fontFamily: "'IBM Plex Mono', monospace" }}>
+        <span className="label" style={{ fontStyle: "italic" }}>
           Starting bonds = CHA (currently {Number(activeChar.stats?.cha?.score) || 0})
         </span>
       }>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="col" style={{ gap: 8 }}>
           {activeChar.bonds.map((bond, i) => {
             const pct = bond.scoreMax > 0
               ? Math.max(0, Math.min(100, ((Number(bond.score) || 0) / bond.scoreMax) * 100))
               : null;
             const isBroken = bond.scoreMax > 0 && Number(bond.score) === 0;
             return (
-              <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                  <div style={{ flex: 2 }}>
-                    <Field
-                      value={bond.name}
-                      placeholder={`Bond ${i + 1}`}
-                      disabled={isLocked}
-                      redacted={isRedacted}
-                      seed={31 + i * 3}
-                      onChange={v => updateBondName(i, v)}
-                      onFocus={e => { e.target.dataset.logPrev = bond.name || ""; }}
-                      onBlur={e => {
-                        const prev = e.target.dataset.logPrev ?? "";
-                        const next = e.target.value;
-                        if (next.trim() && next.trim() !== (prev || "").trim()) {
-                          addLogEntry(`Bond ${i + 1}: '${truncLog(next.trim())}'`, prev, next, "manual");
-                        }
-                      }}
-                    />
-                  </div>
-                  {pct !== null && !isRedacted && (
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "stretch", gap: 2, minWidth: 40, alignSelf: "flex-start", paddingTop: 6 }}>
-                      <div style={{ height: 6, background: "rgba(180,80,80,0.15)", borderRadius: 3, overflow: "hidden" }}>
-                        <div style={{
-                          height: "100%",
-                          width: `${pct}%`,
-                          background: isBroken ? "#C44040" : "#C49050",
-                          borderRadius: 3,
-                          transition: "width 0.4s ease, background 0.3s ease",
-                        }} />
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                        <span style={{ fontSize: 9, color: isBroken ? "#C44040" : "#5A6A40", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: 0.5, lineHeight: 1 }}>
-                          {Number(bond.score) || 0} / {bond.scoreMax}
-                        </span>
-                        {isBroken && (
-                          <span style={{ fontSize: 9, color: "#C44040", fontFamily: "'Special Elite', cursive", letterSpacing: 2, lineHeight: 1 }}>
-                            BROKEN
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  <NumField value={bond.score} width={70} disabled={isLocked} redacted={isRedacted} onChange={v => updateBondScore(i, v, bond)} />
+              <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <div style={{ flex: 2 }}>
+                  <Field
+                    value={bond.name}
+                    placeholder={`Bond ${i + 1}`}
+                    disabled={isLocked}
+                    redacted={isRedacted}
+                    seed={31 + i * 3}
+                    onChange={v => updateBondName(i, v)}
+                    onFocus={e => { e.target.dataset.logPrev = bond.name || ""; }}
+                    onBlur={e => {
+                      const prev = e.target.dataset.logPrev ?? "";
+                      const next = e.target.value;
+                      if (next.trim() && next.trim() !== (prev || "").trim()) {
+                        addLogEntry(`Bond ${i + 1}: '${truncLog(next.trim())}'`, prev, next, "manual");
+                      }
+                    }}
+                  />
                 </div>
+                {pct !== null && !isRedacted && (
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, minWidth: 40, paddingTop: 10 }}>
+                    <div style={{ height: 6, background: "var(--line-soft)", overflow: "hidden" }}>
+                      <div style={{
+                        height: "100%",
+                        width: `${pct}%`,
+                        background: isBroken ? "var(--redact)" : "var(--ink-2)",
+                        transition: "width 0.4s ease",
+                      }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: 9, fontFamily: "var(--font-mono)", color: isBroken ? "var(--redact)" : "var(--ink-3)" }}>
+                      <span>{Number(bond.score) || 0} / {bond.scoreMax}</span>
+                      {isBroken && <span className="handwritten" style={{ letterSpacing: 2 }}>BROKEN</span>}
+                    </div>
+                  </div>
+                )}
+                <NumField value={bond.score} width={70} disabled={isLocked} redacted={isRedacted} onChange={v => updateBondScore(i, v, bond)} />
               </div>
             );
           })}
-          {!isLocked && <button className="btn btn-sm" style={{ alignSelf: "flex-start" }} onClick={addBond}>+ ADD BOND</button>}
+          {!isLocked && <button type="button" className="btn btn-sm" style={{ alignSelf: "flex-start" }} onClick={addBond}>+ ADD BOND</button>}
         </div>
       </CollapsibleSection>
 
@@ -188,32 +191,32 @@ export const PersonalTab = memo(function PersonalTab({ activeChar, isKIA, isLock
 
       <CollapsibleSection icon="05" title="Incidents of SAN Loss Without Going Insane">
         <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 11, fontFamily: "'Special Elite', cursive", color: "#7A8A60", letterSpacing: 1 }}>VIOLENCE</span>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="col" style={{ gap: 8 }}>
+            <span className="label">VIOLENCE</span>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               {activeChar.sanLoss.violence.map((v, i) => (
                 <CheckBox key={i} checked={v} disabled={isLocked} onChange={val => {
                   updateSanLossBox("violence", i, val);
                   addLogEntry(`Violence SAN ${i + 1}: ${val ? "marked" : "cleared"}`, !val, val, "manual");
                 }} />
               ))}
-              <span style={{ fontSize: 10, color: "#5A6A40", margin: "0 4px" }}>|</span>
+              <span style={{ color: "var(--ink-3)", margin: "0 4px" }}>|</span>
               <CheckBox checked={activeChar.sanLoss.violenceAdapted} label="Adapted" disabled={isLocked} onChange={val => {
                 updateAdapted("violenceAdapted", val);
                 addLogEntry(`Violence Adapted: ${val ? "✓" : "cleared"}`, !val, val, "manual");
               }} />
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <span style={{ fontSize: 11, fontFamily: "'Special Elite', cursive", color: "#7A8A60", letterSpacing: 1 }}>HELPLESSNESS</span>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="col" style={{ gap: 8 }}>
+            <span className="label">HELPLESSNESS</span>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               {activeChar.sanLoss.helplessness.map((v, i) => (
                 <CheckBox key={i} checked={v} disabled={isLocked} onChange={val => {
                   updateSanLossBox("helplessness", i, val);
                   addLogEntry(`Helplessness SAN ${i + 1}: ${val ? "marked" : "cleared"}`, !val, val, "manual");
                 }} />
               ))}
-              <span style={{ fontSize: 10, color: "#5A6A40", margin: "0 4px" }}>|</span>
+              <span style={{ color: "var(--ink-3)", margin: "0 4px" }}>|</span>
               <CheckBox checked={activeChar.sanLoss.helplessnessAdapted} label="Adapted" disabled={isLocked} onChange={val => {
                 updateAdapted("helplessnessAdapted", val);
                 addLogEntry(`Helplessness Adapted: ${val ? "✓" : "cleared"}`, !val, val, "manual");
@@ -224,49 +227,59 @@ export const PersonalTab = memo(function PersonalTab({ activeChar, isKIA, isLock
       </CollapsibleSection>
 
       <CollapsibleSection icon="06" title="Unnatural Encounters">
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "10px 16px", background: "rgba(130,80,160,0.06)", border: "1px solid rgba(130,80,160,0.2)", borderRadius: 6, marginBottom: 4 }}>
-          <span style={{ fontSize: 11, color: "#9060A0", fontFamily: "'Special Elite', cursive", letterSpacing: 1 }}>UNNATURAL SKILL</span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 18, fontWeight: 700, color: "#D4D8C8" }}>{totalUnnatural}%</span>
-          <span style={{ fontSize: 14, color: "#5A4060" }}>→</span>
-          <span style={{ fontSize: 11, color: "#9060A0", fontFamily: "'Special Elite', cursive", letterSpacing: 1 }}>SAN MAX CEILING</span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 18, fontWeight: 700, color: totalUnnatural > 0 ? "#C44040" : "#D4D8C8" }}>{sanMaxCeiling}</span>
+        <div className="row flex-wrap" style={{ gap: 12, padding: "10px 16px", border: "1px solid var(--stamp-blue)", background: "rgba(31,58,107,0.06)", marginBottom: 8 }}>
+          <span className="label" style={{ color: "var(--stamp-blue)" }}>UNNATURAL SKILL</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 700, color: "var(--ink)" }}>{totalUnnatural}%</span>
+          <span style={{ color: "var(--ink-3)" }}>→</span>
+          <span className="label" style={{ color: "var(--stamp-blue)" }}>SAN MAX CEILING</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 700, color: totalUnnatural > 0 ? "var(--redact)" : "var(--ink)" }}>{sanMaxCeiling}</span>
           <span style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: "#5A4060", fontStyle: "italic" }}>99 − {totalUnnatural} = {sanMaxCeiling}</span>
+          <span className="label" style={{ fontStyle: "italic" }}>99 − {totalUnnatural} = {sanMaxCeiling}</span>
         </div>
-        <div style={{ fontSize: 10, color: "#5A4060", fontStyle: "italic", marginBottom: 10 }}>
+        <div className="label" style={{ fontStyle: "italic", marginBottom: 10 }}>
           Unnatural cannot be voluntarily improved. It is awarded by the Handler after witnessing impossible things. Each point permanently reduces SAN max by 1.
         </div>
 
         {encounters.length === 0 && (
-          <div style={{ padding: "12px 16px", textAlign: "center", color: "#4A3A60", fontSize: 12, fontStyle: "italic", borderRadius: 4, border: "1px dashed rgba(130,80,160,0.15)", marginBottom: 4 }}>
+          <div style={{ padding: "12px 16px", textAlign: "center", fontStyle: "italic", border: "1px dashed var(--line-2)", marginBottom: 4 }} className="label">
             No encounters logged. The void has not yet reached this agent.
           </div>
         )}
         {encounters.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 4 }}>
+          <div className="col" style={{ gap: 4, marginBottom: 4 }}>
             {encounters.map((enc, idx) => (
-              <div key={enc.id} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center", padding: "8px 12px", background: "rgba(130,80,160,0.04)", border: "1px solid rgba(130,80,160,0.12)", borderRadius: 4 }}>
+              <div key={enc.id} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 8, alignItems: "center", padding: "8px 12px", border: "1px solid var(--line-2)" }}>
                 {isLocked ? (
-                  <span style={{ fontSize: 12, color: "#7A6080", fontStyle: "italic" }}>{enc.desc || "(no description)"}</span>
+                  <span style={{ fontSize: 13, color: "var(--ink-2)", fontStyle: "italic" }}>{enc.desc || "(no description)"}</span>
                 ) : (
-                  <input type="text" value={enc.desc} placeholder="What did the agent witness?" onChange={e => { const updated = encounters.map((en, i) => i === idx ? { ...en, desc: e.target.value } : en); handleUnnaturalChange(updated); }} style={{ background: "transparent", border: "none", borderBottom: "1px solid rgba(130,80,160,0.25)", color: "#C8B8D8", fontSize: 12, padding: "2px 4px", outline: "none", fontFamily: "'IBM Plex Sans', sans-serif", width: "100%" }} />
+                  <input type="text" value={enc.desc} placeholder="What did the agent witness?"
+                    onChange={e => { const updated = encounters.map((en, i) => i === idx ? { ...en, desc: e.target.value } : en); handleUnnaturalChange(updated); }}
+                    className="field-line"
+                    style={{ fontFamily: "var(--font-hand)" }}
+                  />
                 )}
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ fontSize: 9, color: "#5A4060", fontFamily: "'Special Elite', cursive", letterSpacing: 1 }}>+</span>
+                  <span className="label">+</span>
                   {isLocked ? (
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 14, color: "#9060A0", minWidth: 28, textAlign: "center" }}>{enc.pts}</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--ink)", minWidth: 28, textAlign: "center" }}>{enc.pts}</span>
                   ) : (
-                    <input type="number" value={enc.pts} min={0} max={99} onChange={e => { const updated = encounters.map((en, i) => i === idx ? { ...en, pts: Math.max(0, Number(e.target.value) || 0) } : en); handleUnnaturalChange(updated); }} style={{ width: 44, textAlign: "center", background: "rgba(130,80,160,0.08)", border: "1px solid rgba(130,80,160,0.25)", borderRadius: 3, padding: "3px 2px", color: "#C8B8D8", fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", outline: "none" }} />
+                    <input type="number" value={enc.pts} min={0} max={99}
+                      onChange={e => { const updated = encounters.map((en, i) => i === idx ? { ...en, pts: Math.max(0, Number(e.target.value) || 0) } : en); handleUnnaturalChange(updated); }}
+                      className="field-num" style={{ width: 52 }}
+                    />
                   )}
-                  <span style={{ fontSize: 9, color: "#5A4060" }}>pts</span>
+                  <span className="label">pts</span>
                 </div>
                 {!isLocked && (
-                  <button onClick={() => { const updated = encounters.filter((_, i) => i !== idx); handleUnnaturalChange(updated); }} style={{ background: "none", border: "none", color: "#5A3060", cursor: "pointer", fontSize: 14, padding: "2px 6px", borderRadius: 3 }} onMouseEnter={e => e.currentTarget.style.color = "#C44040"} onMouseLeave={e => e.currentTarget.style.color = "#5A3060"} title="Remove encounter">✕</button>
+                  <button type="button" className="btn btn-tiny btn-ghost"
+                    onClick={() => { const updated = encounters.filter((_, i) => i !== idx); handleUnnaturalChange(updated); }}
+                    title="Remove encounter"
+                  >✕</button>
                 )}
               </div>
             ))}
             <div style={{ display: "flex", justifyContent: "flex-end", padding: "2px 12px" }}>
-              <span style={{ fontSize: 10, color: "#5A4060", fontFamily: "'IBM Plex Mono', monospace" }}>Total: {totalUnnatural} pts across {encounters.length} encounter{encounters.length !== 1 ? "s" : ""}</span>
+              <span className="label">Total: {totalUnnatural} pts across {encounters.length} encounter{encounters.length !== 1 ? "s" : ""}</span>
             </div>
           </div>
         )}

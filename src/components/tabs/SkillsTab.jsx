@@ -5,11 +5,12 @@ import { useMediaQuery } from "../../hooks/useMediaQuery";
 
 const ROLL_DISPLAY_MS = 4000;
 
-function rollColor(result) {
-  if (!result) return "#5A6A40";
-  if (result.isCritical) return "#D4A020";
-  if (result.isFumble) return "#C44040";
-  return result.pass ? "#60A060" : "#C45050";
+function rollTone(result) {
+  if (!result) return { fg: "var(--ink-3)", bg: "var(--line-soft)", border: "var(--line-2)" };
+  if (result.isCritical) return { fg: "var(--stamp-blue)", bg: "rgba(31,58,107,0.08)", border: "var(--stamp-blue)" };
+  if (result.isFumble) return { fg: "var(--redact)", bg: "var(--redact-wash)", border: "var(--redact)" };
+  if (result.pass) return { fg: "var(--ok)", bg: "rgba(45,90,61,0.08)", border: "var(--ok)" };
+  return { fg: "var(--redact)", bg: "var(--redact-wash)", border: "var(--redact)" };
 }
 
 function rollLabel(result) {
@@ -35,15 +36,21 @@ function DiceButton({ target, disabled, onResult }) {
   };
 
   if (result) {
-    const color = rollColor(result);
+    const tone = rollTone(result);
     return (
       <span
         onClick={handleRoll}
         style={{
-          cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, fontWeight: 700,
-          color, padding: "1px 6px", borderRadius: 3, border: `1px solid ${color}55`,
-          background: `${color}15`, whiteSpace: "nowrap", userSelect: "none",
-          animation: "fadeIn 0.2s ease",
+          cursor: "pointer",
+          fontFamily: "var(--font-mono)",
+          fontSize: 10,
+          fontWeight: 700,
+          color: tone.fg,
+          padding: "2px 6px",
+          border: `1px solid ${tone.border}`,
+          background: tone.bg,
+          whiteSpace: "nowrap",
+          userSelect: "none",
         }}
         title={`Rolled ${result.roll} vs ${result.target}`}
       >
@@ -54,24 +61,34 @@ function DiceButton({ target, disabled, onResult }) {
 
   return (
     <button
+      type="button"
       onClick={handleRoll}
       disabled={disabled}
       title={disabled ? undefined : `Roll d100 vs ${target}%`}
       style={{
-        background: "none", border: "none", cursor: disabled ? "not-allowed" : "pointer",
-        color: disabled ? "#3A4A30" : "#5A6A40", fontSize: 13, padding: "0 3px", lineHeight: 1,
-        opacity: disabled ? 0.4 : 0.7, transition: "opacity 0.15s",
+        background: "none",
+        border: "none",
+        cursor: disabled ? "not-allowed" : "pointer",
+        color: disabled ? "var(--ink-muted)" : "var(--ink-2)",
+        fontSize: 14,
+        padding: "0 4px",
+        opacity: disabled ? 0.3 : 0.75,
       }}
-      onMouseEnter={e => { if (!disabled) e.currentTarget.style.opacity = "1"; }}
-      onMouseLeave={e => { if (!disabled) e.currentTarget.style.opacity = "0.7"; }}
-    >
-      &#9860;
-    </button>
+    >⚄</button>
   );
 }
 
+const skillRow = {
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+  padding: "6px 8px",
+  borderBottom: "1px solid var(--line-soft)",
+};
+
 export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, updateChar, addLogEntry }) {
   const isMobile = useMediaQuery("(max-width: 700px)");
+
   const updateSkillFailed = useCallback((i, val) => {
     updateChar(c => { const skills = [...c.skills]; skills[i] = { ...skills[i], failed: val }; return { ...c, skills }; });
   }, [updateChar]);
@@ -113,10 +130,7 @@ export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, 
     const skillLabel = skill.name + (skill.hasSpec && skill.spec ? ` (${skill.spec})` : "");
     const tag = result.isCritical ? " CRITICAL" : result.isFumble ? " FUMBLE" : result.pass ? "" : " FAIL";
     addLogEntry(`Roll ${skillLabel}: ${result.roll} vs ${result.target}%${tag}`, null, null, "manual");
-    // Auto-check failed box on failure
-    if (!result.pass && !skill.failed) {
-      updateSkillFailed(i, true);
-    }
+    if (!result.pass && !skill.failed) updateSkillFailed(i, true);
   }, [addLogEntry, updateSkillFailed]);
 
   const handleOtherSkillRoll = useCallback((skill, result) => {
@@ -126,37 +140,49 @@ export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, 
   }, [addLogEntry]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="col" style={{ gap: 24 }}>
       <CollapsibleSection icon="09" title="Applicable Skill Sets">
-        <div style={{ fontSize: 11, color: "#5A6A40", fontStyle: "italic", marginBottom: 8 }}>
+        <div className="label" style={{ fontStyle: "italic", marginBottom: 8 }}>
           {isKIA ? "This agent's skill records have been archived." : "Check the box when you fail a skill roll. Hit End Mission at the top when the operation is over to roll 1d4 advancement for each."}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "100%" : "280px"}, 1fr))`, gap: 4 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "100%" : "280px"}, 1fr))`, gap: 0 }}>
           {activeChar.skills.map((skill, i) => skill.name === "Unnatural" ? (
-            <div key={i} className="skill-row" title="Tracked in §14 Unnatural Encounters — cannot be manually advanced" style={{ opacity: isKIA ? 0.6 : 1, background: "rgba(130,80,160,0.04)", border: "1px solid rgba(130,80,160,0.1)", borderRadius: 3, padding: isMobile ? "4px 6px" : undefined }}>
-              <span style={{ width: 18, height: 18, display: "inline-block", flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: 12, color: "#9060A0", fontWeight: 500, fontFamily: "'Special Elite', cursive", letterSpacing: 1 }}>Unnatural</span>
-              {!isMobile && <span style={{ fontSize: 9, color: "#5A4060", fontStyle: "italic", marginRight: 4 }}>forbidden knowledge</span>}
-              <span style={{ fontSize: 10, color: "#5A4060", minWidth: 24, textAlign: "right" }}>(0%)</span>
-              <span style={{ width: 50, textAlign: "center", background: "rgba(130,80,160,0.1)", border: "1px solid rgba(130,80,160,0.2)", borderRadius: 3, padding: "3px 2px", color: "#9060A0", fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", display: "inline-block" }}>{skill.value ?? 0}</span>
-              <span style={{ fontSize: 11, color: "#5A6A40" }}>%</span>
+            <div key={i}
+              style={{ ...skillRow, opacity: isKIA ? 0.6 : 1, background: "rgba(31,58,107,0.04)" }}
+              title="Tracked in §06 Unnatural Encounters — cannot be manually advanced"
+            >
+              <span style={{ width: 14, display: "inline-block" }} />
+              <span className="handwritten" style={{ flex: 1, color: "var(--stamp-blue)", letterSpacing: 1 }}>Unnatural</span>
+              {!isMobile && <span className="label" style={{ fontStyle: "italic" }}>forbidden knowledge</span>}
+              <span className="label">(0%)</span>
+              <span className="field-num" style={{ width: 50 }}>{skill.value ?? 0}</span>
+              <span className="label">%</span>
             </div>
           ) : (
-            <div key={i} className="skill-row" style={{ opacity: isKIA ? 0.7 : 1, padding: isMobile ? "4px 6px" : undefined, gap: isMobile ? 4 : undefined }}>
+            <div key={i} style={{ ...skillRow, opacity: isKIA ? 0.7 : 1 }}>
               <CheckBox checked={skill.failed} disabled={isLocked} onChange={val => updateSkillFailed(i, val)} />
-              <span style={{ flex: 1, fontSize: isMobile ? 11 : 12, color: skill.value > skill.base ? (isKIA ? "#886060" : "#A0B880") : "#A0A890", fontWeight: skill.value > skill.base ? 500 : 400 }}>
+              <span style={{
+                flex: 1,
+                fontSize: 13,
+                fontFamily: "var(--font-sans)",
+                color: skill.value > skill.base ? "var(--ink)" : "var(--ink-2)",
+                fontWeight: skill.value > skill.base ? 600 : 400,
+              }}>
                 {skill.name}{skill.hasSpec ? ":" : ""}
               </span>
               {skill.hasSpec && (
                 <input type="text" value={skill.spec || ""} placeholder="..." disabled={isLocked}
                   onChange={e => updateSkillSpec(i, e.target.value)}
-                  style={{ width: isMobile ? 50 : 70, background: "transparent", border: "none", borderBottom: `1px solid ${isLocked ? "rgba(80,80,80,0.15)" : "rgba(139,160,105,0.2)"}`, color: isLocked ? "#666" : "#A0A890", fontSize: 11, padding: "2px 4px", outline: "none", cursor: isLocked ? "not-allowed" : undefined }} />
+                  className="field-line"
+                  style={{ width: isMobile ? 50 : 70, fontSize: 12, fontFamily: "var(--font-hand)" }}
+                />
               )}
-              {!isMobile && <span style={{ fontSize: 10, color: "#5A6A40", minWidth: 24, textAlign: "right" }}>({skill.base}%)</span>}
+              {!isMobile && <span className="label">({skill.base}%)</span>}
               <input type="number" value={skill.value ?? ""} min={0} max={99} disabled={isLocked}
                 onChange={e => updateSkillValue(i, skill, e.target.value)}
-                style={{ width: isMobile ? 42 : 50, textAlign: "center", background: isLocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.05)", border: `1px solid ${isLocked ? "rgba(80,80,80,0.15)" : "rgba(139,160,105,0.2)"}`, borderRadius: 3, padding: "3px 2px", color: isLocked ? "#666" : "#D4D8C8", fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", outline: "none", cursor: isLocked ? "not-allowed" : undefined }} />
-              <span style={{ fontSize: 11, color: "#5A6A40" }}>%</span>
+                className="field-num" style={{ width: isMobile ? 42 : 50 }}
+              />
+              <span className="label">%</span>
               <DiceButton target={Number(skill.value) || 0} disabled={isKIA} onResult={r => handleSkillRoll(i, skill, r)} />
             </div>
           ))}
@@ -164,21 +190,23 @@ export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, 
       </CollapsibleSection>
 
       <CollapsibleSection icon="10" title="Foreign Languages & Other Skills">
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "100%" : "280px"}, 1fr))`, gap: 4 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "100%" : "280px"}, 1fr))`, gap: 0 }}>
           {activeChar.otherSkills.map((skill, i) => (
-            <div key={i} className="skill-row" style={{ opacity: isKIA ? 0.7 : 1 }}>
+            <div key={i} style={{ ...skillRow, opacity: isKIA ? 0.7 : 1 }}>
               <input type="text" value={skill.name} placeholder={`Skill ${i + 1}...`} disabled={isLocked}
                 onChange={e => updateOtherSkillName(i, e.target.value)}
-                style={{ flex: 1, background: "transparent", border: "none", borderBottom: `1px solid ${isLocked ? "rgba(80,80,80,0.15)" : "rgba(139,160,105,0.15)"}`, color: isLocked ? "#666" : "#A0A890", fontSize: 12, padding: "2px 4px", outline: "none", cursor: isLocked ? "not-allowed" : undefined }} />
+                className="field-line" style={{ flex: 1, fontSize: 13 }}
+              />
               <input type="number" value={skill.value ?? ""} min={0} max={99} disabled={isLocked}
                 onChange={e => updateOtherSkillValue(i, skill, e.target.value)}
-                style={{ width: 50, textAlign: "center", background: isLocked ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.05)", border: `1px solid ${isLocked ? "rgba(80,80,80,0.15)" : "rgba(139,160,105,0.2)"}`, borderRadius: 3, padding: "3px 2px", color: isLocked ? "#666" : "#D4D8C8", fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", outline: "none", cursor: isLocked ? "not-allowed" : undefined }} />
-              <span style={{ fontSize: 11, color: "#5A6A40" }}>%</span>
+                className="field-num" style={{ width: 50 }}
+              />
+              <span className="label">%</span>
               {skill.name && <DiceButton target={Number(skill.value) || 0} disabled={isKIA} onResult={r => handleOtherSkillRoll(skill, r)} />}
             </div>
           ))}
         </div>
-        {!isLocked && <button className="btn btn-sm" style={{ alignSelf: "flex-start" }} onClick={addOtherSkill}>+ ADD SKILL</button>}
+        {!isLocked && <button type="button" className="btn btn-sm" style={{ alignSelf: "flex-start", marginTop: 8 }} onClick={addOtherSkill}>+ ADD SKILL</button>}
       </CollapsibleSection>
     </div>
   );

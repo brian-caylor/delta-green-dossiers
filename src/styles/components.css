@@ -330,6 +330,54 @@ body.theme-greenscreen .paper {
   color: var(--ink);
 }
 
+/* ===== Modal scaffolding ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: dg-fade-in 0.15s ease;
+}
+
+.modal {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  padding: 24px;
+  width: min(560px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-title {
+  font-family: var(--font-hand);
+  font-size: 18px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.modal-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+}
+
+@keyframes dg-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 12px; height: 12px; }
 ::-webkit-scrollbar-track { background: var(--paper-2); }

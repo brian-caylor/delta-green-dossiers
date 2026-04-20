@@ -9,11 +9,11 @@ export const Redacted = React.memo(({ children, active, inline, seed }) => {
   for (let i = 0; i < barCount; i++) {
     const w = 55 + (((seed || 7) * (i + 3) * 17) % 40);
     bars.push(
-      <div key={i} style={{
-        height: inline ? 14 : 16, width: `${Math.min(w, 98)}%`, background: "#0A0A0A",
-        borderRadius: 2, marginBottom: inline ? 0 : 3,
-        boxShadow: "0 0 0 1px rgba(30,30,30,1), 0 1px 3px rgba(0,0,0,0.5)",
-      }} />
+      <div
+        key={i}
+        className="redacted"
+        style={{ width: `${Math.min(w, 98)}%`, height: inline ? 14 : 16, marginBottom: inline ? 0 : 3 }}
+      >&nbsp;</div>
     );
   }
   return (

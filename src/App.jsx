@@ -350,7 +350,7 @@ function DossierApp() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", color: "#D4D8C8", fontFamily: "'IBM Plex Sans', sans-serif", background: "#1A1D16", display: "flex", flexDirection: "column" }}>
+    <div className="paper" style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column" }}>
       <TopBar />
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 
@@ -360,9 +360,9 @@ function DossierApp() {
 
       {/* Storage Error Banner */}
       {storageError && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "8px 16px", background: "rgba(180,80,40,0.95)", color: "#FFF", fontSize: 13, fontFamily: "'IBM Plex Sans', sans-serif" }}>
+        <div className="redact-bar" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "8px 16px", letterSpacing: 1 }}>
           <span style={{ flex: 1 }}>{storageError}</span>
-          <button onClick={() => setStorageError(null)} style={{ background: "none", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 3, color: "#FFF", cursor: "pointer", padding: "2px 10px", fontSize: 12 }}>Dismiss</button>
+          <button type="button" className="btn btn-tiny" style={{ color: "var(--paper)", borderColor: "var(--paper)", background: "transparent" }} onClick={() => setStorageError(null)}>Dismiss</button>
         </div>
       )}
 
@@ -372,53 +372,29 @@ function DossierApp() {
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9998,
           display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
           padding: "10px 16px",
-          background: "rgba(30,60,40,0.97)", borderTop: "1px solid rgba(100,180,100,0.3)",
-          color: "#D4D8C8", fontSize: 13, fontFamily: "'IBM Plex Sans', sans-serif",
-          backdropFilter: "blur(8px)",
+          background: "var(--ink)", color: "var(--paper)", borderTop: "3px solid var(--redact)",
+          fontSize: 13, fontFamily: "var(--font-mono)",
         }}>
           <span style={{ flex: 1 }}>📲 Install <strong>Agent Dossiers</strong> for offline access — works without internet.</span>
-          <button
-            onClick={triggerInstall}
-            style={{
-              background: "#4A7A3D", border: "none", borderRadius: 4,
-              color: "#FFF", cursor: "pointer", padding: "5px 14px",
-              fontSize: 12, fontWeight: 600, letterSpacing: 0.3,
-            }}
-          >
-            Install
-          </button>
-          <button
-            onClick={dismissInstall}
-            style={{
-              background: "none", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 4,
-              color: "#AAA", cursor: "pointer", padding: "4px 10px", fontSize: 12,
-            }}
-          >
-            Maybe later
-          </button>
+          <button type="button" className="btn btn-sm" style={{ background: "var(--paper)", color: "var(--ink)" }} onClick={triggerInstall}>Install</button>
+          <button type="button" className="btn btn-sm" style={{ background: "transparent", color: "var(--paper)", borderColor: "var(--paper)" }} onClick={dismissInstall}>Maybe later</button>
         </div>
       )}
 
       {/* Mission End Confirmation */}
       {missionEndConfirm && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 300, padding: 20, animation: "fadeIn 0.2s ease" }}>
-          <div style={{ background: "#1A1D16", border: "1px solid rgba(139,160,105,0.35)", borderRadius: 8, width: "min(440px, 92vw)", boxShadow: "0 24px 64px rgba(0,0,0,0.6)", padding: "24px" }}>
-            <div style={{ fontFamily: "'Special Elite', cursive", fontSize: 18, letterSpacing: 4, color: "#8BA069", marginBottom: 12 }}>
-              END MISSION?
+        <div className="modal-backdrop" onClick={() => setMissionEndConfirm(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(480px, 92vw)" }}>
+            <div className="modal-title">END MISSION?</div>
+            <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.7, marginBottom: 10 }}>
+              This will roll <strong>1d4 advancement</strong> for each failed skill and clear all checkboxes.
             </div>
-            <div style={{ fontSize: 13, color: "#A0AA90", lineHeight: 1.7, marginBottom: 8 }}>
-              This will roll <strong style={{ color: "#D4D8C8" }}>1d4 advancement</strong> for each failed skill and clear all checkboxes.
-            </div>
-            <div style={{ fontSize: 12, color: "#7A8A60", lineHeight: 1.6, marginBottom: 20, padding: "10px 12px", background: "rgba(139,160,105,0.06)", borderRadius: 4, border: "1px solid rgba(139,160,105,0.12)" }}>
+            <div style={{ fontSize: 12, color: "var(--ink-3)", lineHeight: 1.6, marginBottom: 20, padding: "10px 12px", border: "1px dashed var(--line-2)" }}>
               In Delta Green, skill advancement happens at the <em>end of the operation</em> — not after each individual session. Only confirm if the current mission is complete.
             </div>
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button className="btn" onClick={() => setMissionEndConfirm(false)} style={{ padding: "8px 20px", letterSpacing: 2 }}>
-                CANCEL
-              </button>
-              <button className="btn" onClick={confirmMissionEnd} style={{ padding: "8px 20px", letterSpacing: 2, borderColor: "rgba(100,160,220,0.45)", background: "rgba(100,160,220,0.1)", color: "#7AAAD4" }}>
-                CONFIRM — ROLL ADVANCEMENT
-              </button>
+              <button type="button" className="btn" onClick={() => setMissionEndConfirm(false)}>CANCEL</button>
+              <button type="button" className="btn btn-primary" onClick={confirmMissionEnd}>CONFIRM — ROLL ADVANCEMENT</button>
             </div>
           </div>
         </div>
@@ -489,30 +465,29 @@ function DossierApp() {
 
       {/* Import Progress Overlay */}
       {importState.active && (
-        <div className="confirm-overlay" style={{ zIndex: 300 }} onClick={() => importState.phase === "error" ? setImportState({ active: false, status: "", phase: "", error: null }) : null}>
-          <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ borderColor: importState.phase === "error" ? "rgba(180,50,50,0.4)" : "rgba(139,160,105,0.3)" }}>
+        <div className="modal-backdrop" onClick={() => importState.phase === "error" ? setImportState({ active: false, status: "", phase: "", error: null }) : null}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(420px, 92vw)", textAlign: "center" }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>
               {importState.phase === "reading" && "📄"}
               {importState.phase === "analyzing" && "🔍"}
               {importState.phase === "building" && "📋"}
               {importState.phase === "error" && "⚠️"}
             </div>
-            <div style={{ fontFamily: "'Special Elite', cursive", fontSize: 16, letterSpacing: 3, marginBottom: 8, color: importState.phase === "error" ? "#C44040" : "#8BA069" }}>
+            <div className="modal-title" style={{ color: importState.phase === "error" ? "var(--redact)" : "var(--ink)" }}>
               {importState.phase === "error" ? "IMPORT FAILED" : "IMPORTING DOSSIER"}
             </div>
-            <div style={{ fontSize: 13, color: "#A0A890", lineHeight: 1.6, marginBottom: 16 }}>{importState.status}</div>
+            <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.6, marginBottom: 16 }}>{importState.status}</div>
             {(importState.phase === "reading" || importState.phase === "analyzing" || importState.phase === "building") && (
-              <div style={{ height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden", marginBottom: 16 }}>
+              <div style={{ height: 4, background: "var(--line-soft)", overflow: "hidden", marginBottom: 16 }}>
                 <div style={{
-                  height: "100%", borderRadius: 2, background: "#8BA069",
-                  animation: "importProgress 2s ease-in-out infinite",
+                  height: "100%", background: "var(--ink)",
                   width: importState.phase === "reading" ? "30%" : importState.phase === "analyzing" ? "65%" : "90%",
                   transition: "width 0.5s ease",
                 }} />
               </div>
             )}
             {importState.phase === "error" && (
-              <button className="btn" onClick={() => setImportState({ active: false, status: "", phase: "", error: null })}>DISMISS</button>
+              <button type="button" className="btn" onClick={() => setImportState({ active: false, status: "", phase: "", error: null })}>DISMISS</button>
             )}
           </div>
         </div>
@@ -521,60 +496,51 @@ function DossierApp() {
       {/* KIA Background Stamp */}
       {isKIA && (
         <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{
-            fontFamily: "'Special Elite', cursive", fontSize: 160, fontWeight: 400,
-            color: "rgba(180, 50, 50, 0.06)", letterSpacing: 30,
+          <div className="handwritten" style={{
+            fontSize: 160, fontWeight: 400,
+            color: "rgba(140,29,29,0.08)", letterSpacing: 30,
             transform: "rotate(-18deg)", userSelect: "none",
-            textShadow: "0 0 40px rgba(180,50,50,0.04)",
           }}>K.I.A.</div>
         </div>
       )}
 
       {/* KIA Confirmation Dialog */}
       {kiaConfirmOpen && (
-        <div className="confirm-overlay" onClick={() => setKiaConfirmOpen(null)}>
-          <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 460 }}>
-            <div style={{
-              fontFamily: "'Special Elite', cursive", fontSize: 36, color: "#C44040",
-              letterSpacing: 8, marginBottom: 6,
-              textShadow: "0 0 20px rgba(180,40,40,0.25)",
-            }}>K.I.A.</div>
-            <div style={{ fontFamily: "'Special Elite', cursive", fontSize: 11, color: "#884040", letterSpacing: 3, marginBottom: 20 }}>
+        <div className="modal-backdrop" onClick={() => setKiaConfirmOpen(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(480px, 92vw)", textAlign: "center", borderColor: "var(--redact)" }}>
+            <div className="handwritten" style={{ fontSize: 36, color: "var(--redact)", letterSpacing: 8, marginBottom: 6 }}>K.I.A.</div>
+            <div className="label" style={{ color: "var(--redact)", marginBottom: 18 }}>
               AGENT CASUALTY REPORT — DELTA GREEN
             </div>
             {kiaConfirmOpen === "hp" ? (
               <>
-                <div style={{ fontSize: 13, color: "#C8A080", lineHeight: 1.7, marginBottom: 10, fontStyle: "italic" }}>
+                <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.7, marginBottom: 10, fontStyle: "italic" }}>
                   "This operative has sustained wounds incompatible with continued field activity.
                   Command has been notified. The Program extends its condolences."
                 </div>
-                <div style={{ fontSize: 12, color: "#A0A890", lineHeight: 1.6, marginBottom: 6 }}>
-                  <span style={{ color: "#D4D8C8", fontWeight: 500 }}>{activeChar ? charName(activeChar) : ""}</span> has fallen in the line of duty.
+                <div style={{ fontSize: 12, color: "var(--ink-2)", lineHeight: 1.6, marginBottom: 6 }}>
+                  <strong>{activeChar ? charName(activeChar) : ""}</strong> has fallen in the line of duty.
                   Mark this dossier as Killed in Action?
                 </div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 13, color: "#A0A890", lineHeight: 1.7, marginBottom: 10 }}>
-                  Confirm the loss of <span style={{ color: "#D4D8C8", fontWeight: 500 }}>{activeChar ? charName(activeChar) : ""}</span> and close their field file.
+                <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.7, marginBottom: 10 }}>
+                  Confirm the loss of <strong>{activeChar ? charName(activeChar) : ""}</strong> and close their field file.
                 </div>
-                <div style={{ fontSize: 12, color: "#7A8A60", lineHeight: 1.6, marginBottom: 6 }}>
+                <div className="label" style={{ fontStyle: "italic", marginBottom: 6 }}>
                   "Agents of Delta Green accept that some operations end only one way.
                   Their sacrifice is noted — and buried."
                 </div>
               </>
             )}
-            <div style={{ fontSize: 11, color: "#5A6A40", lineHeight: 1.5, marginBottom: 24, fontStyle: "italic" }}>
+            <div className="label" style={{ fontStyle: "italic", marginTop: 10, marginBottom: 20 }}>
               The dossier will be archived with sensitive details redacted.
               You may declassify or reinstate the agent at any time.
             </div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button className="btn" onClick={() => setKiaConfirmOpen(null)} style={{ letterSpacing: 2 }}>
-                NO — STAND DOWN
-              </button>
-              <button className="btn btn-kia" onClick={markKIA} style={{ padding: "10px 24px", letterSpacing: 2 }}>
-                YES — MARK K.I.A.
-              </button>
+              <button type="button" className="btn" onClick={() => setKiaConfirmOpen(null)}>NO — STAND DOWN</button>
+              <button type="button" className="btn btn-danger" onClick={markKIA}>YES — MARK K.I.A.</button>
             </div>
           </div>
         </div>
@@ -582,19 +548,13 @@ function DossierApp() {
 
       {/* Generic Confirm Dialog */}
       {confirmDialog && (
-        <div className="confirm-overlay" onClick={() => setConfirmDialog(null)}>
-          <div className="confirm-box" onClick={e => e.stopPropagation()}
-            style={{ borderColor: confirmDialog.danger ? "rgba(180,50,50,0.3)" : "rgba(80,160,80,0.3)" }}>
-            <div style={{
-              fontFamily: "'Special Elite', cursive", fontSize: 20, letterSpacing: 4, marginBottom: 16,
-              color: confirmDialog.danger ? "#C44040" : "#60A060"
-            }}>{confirmDialog.title}</div>
-            <div style={{ fontSize: 13, color: "#A0A890", lineHeight: 1.6, marginBottom: 24 }}>{confirmDialog.message}</div>
+        <div className="modal-backdrop" onClick={() => setConfirmDialog(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(460px, 92vw)", textAlign: "center" }}>
+            <div className="modal-title" style={{ color: confirmDialog.danger ? "var(--redact)" : "var(--ok)" }}>{confirmDialog.title}</div>
+            <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.6, marginBottom: 20 }}>{confirmDialog.message}</div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button className="btn" onClick={() => setConfirmDialog(null)}>CANCEL</button>
-              <button className={`btn ${confirmDialog.danger ? "btn-danger" : ""}`}
-                onClick={confirmDialog.onConfirm}
-                style={confirmDialog.danger ? {} : { borderColor: "rgba(80,140,80,0.4)", background: "rgba(80,140,80,0.12)", color: "#60A060" }}>
+              <button type="button" className="btn" onClick={() => setConfirmDialog(null)}>CANCEL</button>
+              <button type="button" className={`btn ${confirmDialog.danger ? "btn-danger" : "btn-primary"}`} onClick={confirmDialog.onConfirm}>
                 {confirmDialog.confirmLabel || "CONFIRM"}
               </button>
             </div>
@@ -604,100 +564,94 @@ function DossierApp() {
 
       {/* Clear Session Log Confirm Dialog */}
       {clearLogOpen && (
-        <div className="confirm-overlay" onClick={() => setClearLogOpen(false)}>
-          <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ borderColor: "rgba(180,80,80,0.35)" }}>
-            <div style={{ fontFamily: "'Special Elite', cursive", fontSize: 18, letterSpacing: 4, marginBottom: 12, color: "#C44040" }}>CLEAR SESSION LOG</div>
-            <div style={{ fontSize: 13, color: "#A0A890", lineHeight: 1.6, marginBottom: 8 }}>
-              Permanently erase all session log entries for <span style={{ color: "#D4D8C8", fontWeight: 500 }}>{activeChar ? charName(activeChar) : ""}</span>?
+        <div className="modal-backdrop" onClick={() => setClearLogOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ width: "min(460px, 92vw)", textAlign: "center", borderColor: "var(--redact)" }}>
+            <div className="modal-title" style={{ color: "var(--redact)" }}>CLEAR SESSION LOG</div>
+            <div style={{ fontSize: 13, color: "var(--ink-2)", lineHeight: 1.6, marginBottom: 8 }}>
+              Permanently erase all session log entries for <strong>{activeChar ? charName(activeChar) : ""}</strong>?
             </div>
-            <div style={{ fontSize: 11, color: "#5A6A40", fontStyle: "italic", marginBottom: 24, lineHeight: 1.5 }}>
+            <div className="label" style={{ fontStyle: "italic", marginBottom: 20, lineHeight: 1.5 }}>
               This action cannot be undone. Stat changes, skill advancements, and events will be permanently deleted.
             </div>
             <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <button className="btn" onClick={() => setClearLogOpen(false)}>CANCEL</button>
-              <button className="btn btn-danger" onClick={() => { updateChar(c => ({ ...c, sessionLog: [] })); setClearLogOpen(false); }} style={{ letterSpacing: 2 }}>
-                CLEAR LOG
-              </button>
+              <button type="button" className="btn" onClick={() => setClearLogOpen(false)}>CANCEL</button>
+              <button type="button" className="btn btn-danger" onClick={() => { updateChar(c => ({ ...c, sessionLog: [] })); setClearLogOpen(false); }}>CLEAR LOG</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── Mobile sidebar overlay backdrop ─── */}
+      {/* Mobile sidebar backdrop */}
       {isMobile && sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 49, animation: "fadeIn 0.2s ease" }} />
+        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 49 }} />
       )}
 
-      {/* ─── Mobile floating hamburger button ─── */}
+      {/* Mobile floating hamburger */}
       {isMobile && !sidebarOpen && (
-        <button onClick={() => setSidebarOpen(true)} style={{
-          position: "fixed", top: 10, left: 10, zIndex: 50,
-          width: 40, height: 40, borderRadius: 8,
-          background: "rgba(22,25,19,0.95)", border: "1px solid rgba(139,160,105,0.3)",
-          color: "#8BA069", fontSize: 20, cursor: "pointer",
+        <button type="button" onClick={() => setSidebarOpen(true)} style={{
+          position: "fixed", top: 58, left: 10, zIndex: 50,
+          width: 40, height: 40,
+          background: "var(--ink)", border: "1px solid var(--ink)",
+          color: "var(--paper)", fontSize: 20, cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.4)", backdropFilter: "blur(8px)",
         }}>☰</button>
       )}
 
-      {/* ─── Sidebar ─── */}
+      {/* Sidebar */}
       <div style={{
         width: isMobile ? (sidebarOpen ? "85vw" : 0) : (sidebarOpen ? 280 : 52),
         minWidth: isMobile ? (sidebarOpen ? "85vw" : 0) : (sidebarOpen ? 280 : 52),
         maxWidth: isMobile ? 340 : undefined,
-        background: "#161913",
-        borderRight: isMobile && !sidebarOpen ? "none" : "1px solid rgba(139,160,105,0.15)",
+        background: "var(--paper-2)",
+        borderRight: isMobile && !sidebarOpen ? "none" : "1px solid var(--line-2)",
         display: "flex", flexDirection: "column",
-        transition: "width 0.3s, min-width 0.3s",
+        transition: "width 0.25s, min-width 0.25s",
         overflow: "hidden",
         position: isMobile ? "fixed" : "relative",
         top: isMobile ? 0 : undefined,
         left: isMobile ? 0 : undefined,
         bottom: isMobile ? 0 : undefined,
         zIndex: isMobile ? 50 : 10,
-        boxShadow: isMobile && sidebarOpen ? "4px 0 24px rgba(0,0,0,0.5)" : "none",
       }}>
         <div style={{ padding: sidebarOpen ? "20px 16px 12px" : "20px 8px 12px", display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{
-            background: "none", border: "none", color: "#7A8A60", cursor: "pointer", fontSize: 18, padding: 4, lineHeight: 1,
-          }}>{sidebarOpen ? "◁" : "▷"}</button>
+          <button type="button" onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "var(--ink-2)", cursor: "pointer", fontSize: 18, padding: 4, lineHeight: 1 }}>
+            {sidebarOpen ? "◁" : "▷"}
+          </button>
           {sidebarOpen && (
             <div>
-              <div style={{ fontFamily: "'Special Elite', cursive", fontSize: 16, letterSpacing: 3, color: "#8BA069" }}>DELTA GREEN</div>
-              <div style={{ fontSize: 9, letterSpacing: 2, color: "#5A6A40", marginTop: 2 }}>AGENT DOSSIERS</div>
+              <div className="handwritten" style={{ fontSize: 16, letterSpacing: 3, color: "var(--ink)" }}>DELTA GREEN</div>
+              <div className="label" style={{ marginTop: 2 }}>AGENT DOSSIERS</div>
             </div>
           )}
         </div>
         {sidebarOpen && (
           <>
             <div style={{ padding: "8px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
-              <button className="btn" onClick={addCharacter} style={{ width: "100%", textAlign: "center" }}>+ NEW AGENT</button>
-              <button className="btn" onClick={() => setImportChoiceOpen(true)} style={{ width: "100%", textAlign: "center", fontSize: 11, padding: "6px 12px", borderColor: "rgba(100,140,180,0.3)", background: "rgba(100,140,180,0.08)", color: "#6090B4" }}>
-                IMPORT AGENT
-              </button>
+              <button type="button" className="btn btn-primary" onClick={addCharacter} style={{ width: "100%", justifyContent: "center" }}>+ NEW AGENT</button>
+              <button type="button" className="btn btn-sm" onClick={() => setImportChoiceOpen(true)} style={{ width: "100%", justifyContent: "center" }}>IMPORT AGENT</button>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
               {characters.length === 0 && (
-                <div style={{ padding: "24px 16px", textAlign: "center", color: "#5A6A40", fontSize: 12, fontFamily: "'Special Elite', cursive", letterSpacing: 1 }}>NO AGENTS ON FILE</div>
+                <div className="label" style={{ padding: "24px 16px", textAlign: "center" }}>NO AGENTS ON FILE</div>
               )}
               {characters.map((c) => (
                 <div key={c.id}
                   className={`sidebar-item ${c.id === activeId ? "active" : ""} ${c.kia ? "kia" : ""} ${dragState.dragging === c.id ? "dragging" : ""} ${dragState.over === c.id && dragState.dragging !== c.id ? "drag-over" : ""}`}
                   draggable={!isMobile}
-                  onDragStart={isMobile ? undefined : e => handleDragStart(e, c.id)}
+                  onDragStart={isMobile ? undefined : (e) => handleDragStart(e, c.id)}
                   onDragEnd={isMobile ? undefined : handleDragEnd}
-                  onDragOver={isMobile ? undefined : e => handleDragOver(e, c.id)}
-                  onDrop={isMobile ? undefined : e => handleDrop(e, c.id)}
+                  onDragOver={isMobile ? undefined : (e) => handleDragOver(e, c.id)}
+                  onDrop={isMobile ? undefined : (e) => handleDrop(e, c.id)}
                   onClick={() => { setActiveId(c.id); if (c.kia) setShowRedactions(true); if (isMobile) setSidebarOpen(false); }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    {!isMobile && <span className="drag-handle" onMouseDown={e => e.stopPropagation()} title="Drag to reorder">⠿</span>}
+                    {!isMobile && <span className="drag-handle" onMouseDown={(e) => e.stopPropagation()} title="Drag to reorder">⠿</span>}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", fontSize: 13, fontWeight: 500, color: c.kia ? "#884040" : c.id === activeId ? "#D4D8C8" : "#A0A890", marginBottom: 2 }}>
-                        {c.kia ? <span style={{ textDecoration: "line-through", textDecorationColor: "rgba(180,50,50,0.5)" }}>{charName(c)}</span> : charName(c)}
+                      <div style={{ display: "flex", alignItems: "center", fontSize: 14, fontWeight: 500, color: c.kia ? "var(--redact)" : "var(--ink)", fontFamily: "var(--font-hand)", marginBottom: 2 }}>
+                        {c.kia ? <span style={{ textDecoration: "line-through", textDecorationColor: "var(--redact)" }}>{charName(c)}</span> : charName(c)}
                         {c.kia && <span className="kia-badge">KIA</span>}
                       </div>
-                      <div style={{ fontSize: 10, color: c.kia ? "#664040" : "#5A6A40" }}>
+                      <div className="label" style={{ color: c.kia ? "var(--redact-2)" : "var(--ink-3)" }}>
                         {c.kia ? "ARCHIVED" : (c.personal.profession || "No profession")}
                       </div>
                     </div>
@@ -705,19 +659,19 @@ function DossierApp() {
                   {c.id === activeId && (
                     <div style={{ display: "flex", gap: 6, marginTop: 8, paddingLeft: isMobile ? 0 : 22, flexWrap: "wrap" }}>
                       <div className="sidebar-action-btn">
-                        <button className="btn btn-sm" style={{ padding: "4px 8px" }} onClick={(e) => { e.stopPropagation(); duplicateCharacter(c.id); }}>⧉</button>
+                        <button type="button" className="btn btn-tiny" onClick={(e) => { e.stopPropagation(); duplicateCharacter(c.id); }}>⧉</button>
                         <span className="btn-label">CLONE</span>
                       </div>
                       <div className="sidebar-action-btn">
-                        <button className="btn btn-sm" style={{ padding: "4px 8px", borderColor: "rgba(139,160,105,0.25)", background: "rgba(139,160,105,0.06)", color: "#6A8A55" }} onClick={(e) => { e.stopPropagation(); printDossier(c, false); }}>⎙</button>
+                        <button type="button" className="btn btn-tiny" onClick={(e) => { e.stopPropagation(); printDossier(c, false); }}>⎙</button>
                         <span className="btn-label">PRINT</span>
                       </div>
                       <div className="sidebar-action-btn">
-                        <button className="btn btn-sm" style={{ padding: "4px 8px", borderColor: "rgba(100,160,100,0.25)", background: "rgba(100,160,100,0.06)", color: "#70A870" }} onClick={(e) => { e.stopPropagation(); backupCharacter(c); }}>↓</button>
+                        <button type="button" className="btn btn-tiny" onClick={(e) => { e.stopPropagation(); backupCharacter(c); }}>↓</button>
                         <span className="btn-label">DOWNLOAD</span>
                       </div>
-                      <div className="sidebar-action-btn danger-label">
-                        <button className="btn btn-sm btn-danger" style={{ padding: "4px 8px" }} onClick={(e) => { e.stopPropagation(); deleteCharacter(c.id); }}>✕</button>
+                      <div className="sidebar-action-btn">
+                        <button type="button" className="btn btn-tiny btn-danger" onClick={(e) => { e.stopPropagation(); deleteCharacter(c.id); }}>✕</button>
                         <span className="btn-label">DELETE</span>
                       </div>
                     </div>
@@ -725,27 +679,25 @@ function DossierApp() {
                 </div>
               ))}
             </div>
-            <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(139,160,105,0.1)", fontSize: 9, color: "#4A5A35", textAlign: "center", letterSpacing: 1 }}>TOP SECRET // ORCON</div>
+            <div className="label" style={{ padding: "12px 16px", borderTop: "1px solid var(--line-2)", textAlign: "center" }}>TOP SECRET // ORCON</div>
             <div style={{ padding: "0 16px 12px", textAlign: "center" }}>
-              <a href="https://oddlyuseful.app" target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: "#3A4A2A", textDecoration: "none", letterSpacing: 0.5 }}>
-                &copy; {new Date().getFullYear()} oddlyuseful.app
+              <a href="https://oddlyuseful.app" target="_blank" rel="noopener noreferrer" className="label" style={{ textDecoration: "none" }}>
+                © {new Date().getFullYear()} oddlyuseful.app
               </a>
             </div>
           </>
         )}
       </div>
 
-      {/* ─── Main Content ─── */}
+      {/* Main Content */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {!activeChar ? (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", fontSize: 120, fontFamily: "'Special Elite', cursive", color: "rgba(139,160,105,0.04)", transform: "rotate(-12deg)", letterSpacing: 20, pointerEvents: "none", userSelect: "none" }}>CLASSIFIED</div>
-            <div style={{ fontFamily: "'Special Elite', cursive", fontSize: 24, color: "#5A6A40", letterSpacing: 4 }}>SELECT OR CREATE AN AGENT</div>
+            <div className="handwritten" style={{ position: "absolute", fontSize: 120, color: "rgba(26,23,18,0.05)", transform: "rotate(-12deg)", letterSpacing: 20, pointerEvents: "none", userSelect: "none" }}>CLASSIFIED</div>
+            <div className="handwritten" style={{ fontSize: 24, color: "var(--ink-2)", letterSpacing: 4 }}>SELECT OR CREATE AN AGENT</div>
             <div style={{ display: "flex", gap: 12 }}>
-              <button className="btn" onClick={addCharacter} style={{ fontSize: 14, padding: "12px 28px" }}>+ NEW AGENT DOSSIER</button>
-              <button className="btn" onClick={() => fileInputRef.current?.click()} style={{ fontSize: 14, padding: "12px 28px", borderColor: "rgba(100,140,180,0.3)", background: "rgba(100,140,180,0.08)", color: "#6090B4" }}>
-                IMPORT PDF
-              </button>
+              <button type="button" className="btn btn-primary" onClick={addCharacter} style={{ padding: "12px 28px" }}>+ NEW AGENT DOSSIER</button>
+              <button type="button" className="btn" onClick={() => fileInputRef.current?.click()} style={{ padding: "12px 28px" }}>IMPORT PDF</button>
             </div>
           </div>
         ) : (
@@ -756,55 +708,53 @@ function DossierApp() {
 
             {/* Tab Bar */}
             <div style={{
-              display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "stretch" : "flex-end",
+              display: "flex",
+              flexDirection: isMobile ? "column" : "row",
+              alignItems: isMobile ? "stretch" : "flex-end",
               padding: isMobile ? "0 8px" : "0 24px",
               paddingLeft: isMobile ? 52 : 24,
-              borderBottom: `1px solid ${isKIA ? "rgba(140,50,50,0.2)" : "rgba(139,160,105,0.2)"}`,
-              background: isKIA ? "rgba(30,18,18,0.5)" : "rgba(22,25,19,0.5)",
+              borderBottom: `1px solid ${isKIA ? "var(--redact)" : "var(--line)"}`,
+              background: "var(--paper-2)",
             }}>
               <div className={isMobile ? "tab-scroll-mobile" : ""} style={{
-                padding: isMobile ? "8px 0 0" : "16px 0 0",
+                padding: isMobile ? "8px 0 0" : "14px 0 0",
                 display: "flex", gap: 2, flex: 1,
                 flexWrap: isMobile ? "nowrap" : "wrap",
                 overflowX: isMobile ? "auto" : undefined,
                 WebkitOverflowScrolling: "touch",
               }}>
-                {TABS.map(t => (
-                  <button key={t.id} className={`tab-btn ${tab === t.id ? "active" : ""} ${isKIA ? "kia-tab" : ""}`} onClick={() => setTab(t.id)}
-                    style={isMobile ? { whiteSpace: "nowrap", padding: "6px 12px", fontSize: 11, flexShrink: 0 } : undefined}>
+                {TABS.map((t) => (
+                  <button type="button" key={t.id}
+                    className={`tab-btn ${tab === t.id ? "active" : ""} ${isKIA ? "kia-tab" : ""}`}
+                    onClick={() => setTab(t.id)}
+                    style={isMobile ? { whiteSpace: "nowrap", padding: "6px 12px", fontSize: 11, flexShrink: 0 } : undefined}
+                  >
                     <span style={{ marginRight: isMobile ? 4 : 6, fontSize: 8 }}>{t.icon}</span>{t.label}
                   </button>
                 ))}
               </div>
               <div style={{
                 display: "flex", alignItems: "center", gap: isMobile ? 8 : 10,
-                padding: isMobile ? "4px 0 6px" : "12px 0", flexShrink: 0,
+                padding: isMobile ? "4px 0 6px" : "10px 0", flexShrink: 0,
                 justifyContent: isMobile ? "space-between" : undefined,
               }}>
                 {!isKIA && (() => {
-                  const failCount = activeChar.skills.filter(s => s.failed).length;
+                  const failCount = activeChar.skills.filter((s) => s.failed).length;
                   return (
                     <button
-                      className="btn btn-sm"
+                      type="button"
+                      className={`btn btn-sm ${failCount > 0 ? "btn-primary" : "btn-ghost"}`}
                       onClick={handleMissionEnd}
                       title={failCount > 0 ? `Roll 1d4 advancement for ${failCount} checked skill${failCount !== 1 ? "s" : ""}` : "No failed skills checked"}
-                      style={{
-                        borderColor: failCount > 0 ? "rgba(100,160,220,0.45)" : "rgba(80,80,80,0.25)",
-                        background: failCount > 0 ? "rgba(100,160,220,0.1)" : "rgba(255,255,255,0.03)",
-                        color: failCount > 0 ? "#7AAAD4" : "#4A5A45",
-                        position: "relative",
-                        transition: "all 0.2s",
-                        fontSize: isMobile ? 10 : undefined,
-                        padding: isMobile ? "4px 8px" : undefined,
-                      }}
+                      style={{ position: "relative" }}
                     >
                       ◈ END MISSION
                       {failCount > 0 && (
                         <span style={{
                           position: "absolute", top: -6, right: -6,
-                          background: "#7AAAD4", color: "#0A0E0A",
+                          background: "var(--redact)", color: "var(--paper)",
                           borderRadius: "50%", width: 16, height: 16,
-                          fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
+                          fontSize: 10, fontFamily: "var(--font-mono)",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           fontWeight: 700, lineHeight: 1,
                         }}>{failCount}</span>
@@ -812,21 +762,19 @@ function DossierApp() {
                     </button>
                   );
                 })()}
-                <div style={{ fontSize: isMobile ? 9 : 10, color: "#5A6A40", fontFamily: "'Special Elite', cursive", letterSpacing: 1 }}>
+                <div className="label" style={{ fontFamily: "var(--font-mono)" }}>
                   {isKIA ? "ARCHIVED" : `SAVED ${new Date(activeChar.updatedAt).toLocaleTimeString()}`}
                 </div>
               </div>
             </div>
 
             {/* Tab Content */}
-            <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 12 : 24, animation: "fadeIn 0.3s ease", position: "relative" }}>
-
-                {tab === "personal" && <PersonalTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} handleUnnaturalChange={handleUnnaturalChange} />}
-                {tab === "stats" && <StatsTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} setKiaConfirmOpen={setKiaConfirmOpen} setSanEventData={setSanEventData} setSanEventOpen={setSanEventOpen} setSanProjectionOpen={setSanProjectionOpen} clearTempInsanity={clearTempInsanity} />}
-                {tab === "skills" && <SkillsTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} updateChar={updateChar} addLogEntry={addLogEntry} />}
-                {tab === "combat" && <CombatTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} setGearCatalogOpen={setGearCatalogOpen} weaponDragState={weaponDragState} handleWeaponDragStart={handleWeaponDragStart} handleWeaponDragEnd={handleWeaponDragEnd} handleWeaponDragOver={handleWeaponDragOver} handleWeaponDrop={handleWeaponDrop} />}
-                {tab === "notes" && <NotesTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} setClearLogOpen={setClearLogOpen} />}
-
+            <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? 12 : 24, position: "relative" }}>
+              {tab === "personal" && <PersonalTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} handleUnnaturalChange={handleUnnaturalChange} />}
+              {tab === "stats" && <StatsTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} setKiaConfirmOpen={setKiaConfirmOpen} setSanEventData={setSanEventData} setSanEventOpen={setSanEventOpen} setSanProjectionOpen={setSanProjectionOpen} clearTempInsanity={clearTempInsanity} />}
+              {tab === "skills" && <SkillsTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} updateChar={updateChar} addLogEntry={addLogEntry} />}
+              {tab === "combat" && <CombatTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} setGearCatalogOpen={setGearCatalogOpen} weaponDragState={weaponDragState} handleWeaponDragStart={handleWeaponDragStart} handleWeaponDragEnd={handleWeaponDragEnd} handleWeaponDragOver={handleWeaponDragOver} handleWeaponDrop={handleWeaponDrop} />}
+              {tab === "notes" && <NotesTab activeChar={activeChar} isKIA={isKIA} isLocked={isLocked} isRedacted={isRedacted} updateChar={updateChar} addLogEntry={addLogEntry} setClearLogOpen={setClearLogOpen} />}
             </div>
           </>
         )}
