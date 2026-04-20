@@ -47,9 +47,10 @@ async function ensureInstance() {
       assetPath: "/assets/dice-box/",
       theme: "default",
       themeColor: THEME_COLOR[currentTheme],
-      // Defaults for everything else — physics tuning is only worth
-      // doing if we hit a real problem. Custom values were throwing or
-      // pushing dice off-screen in v1.
+      // scale: controls die size. Library default is ~6 which looks
+      // small in a viewport-sized canvas. 9 puts the dice comfortably
+      // at the scale you'd want to read from across the room.
+      scale: 9,
     });
 
     try {
