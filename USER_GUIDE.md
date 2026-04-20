@@ -29,6 +29,7 @@ This guide covers everything the app can do. For a friendlier 2-minute onboardin
 19. [Cloud Sync, Offline & Auto-Save](#19-cloud-sync-offline--auto-save)
 20. [Keyboard Shortcuts & Tips](#20-keyboard-shortcuts--tips)
 21. [Installing as a PWA](#21-installing-as-a-pwa)
+22. [The Global Dice Roller](#22-the-global-dice-roller)
 
 ---
 
@@ -492,6 +493,7 @@ At the bottom of the Notes tab. Records every significant change; newest first.
 | **PROJ** | SAN projection onto a bond |
 | **SAN** | SAN events (BP, disorders, adaptation, insanity) |
 | **UNNAT** | Unnatural encounter logged or removed (§14) |
+| **ROLL** | Global dice roller was used (see §22 below) |
 | **K.I.A.** | Agent marked killed in action |
 
 ### Log Actions
@@ -585,6 +587,44 @@ The app is a Progressive Web App. Installing gives you an icon on your home scre
 - **Auto-update** — new versions activate on your next visit
 
 Installing doesn't change where your data lives — the cloud is still the source of truth. Your agents follow you across devices regardless of whether you install or use the browser version.
+
+---
+
+---
+
+## 22. The Global Dice Roller
+
+An always-on dice roller sits in the top bar as a **⚄** icon (only visible while you have a character open). Use it any time you need a roll that isn't tied to a specific skill row — damage dice, Lethality rolls, random encounters, stat generation, anything.
+
+### Opening the panel
+Click the **⚄** icon next to the theme switcher. A panel slides down from below the top bar with:
+- **Quick-pick dice**: `d4 / d6 / d8 / d10 / d12 / d20 / d100`. Click any to set the formula.
+- **Formula field**: type any valid formula — `2d6+3`, `1d10-1`, `d100`, `3d6`. The Roll button disables if the formula is invalid.
+- **Target %** (only shown for `d100`): optional; if filled in, the roll uses Delta Green pass/fail/critical/fumble rules.
+- **ROLL** button — triggers the roll.
+- **Recent rolls** history (last 10 this session). Clear with the small button.
+
+Close the panel by clicking the **⚄** again, pressing **Esc**, or clicking outside it.
+
+### The visual roll
+When you hit ROLL, a 3D dice animation takes over the viewport. Dice physically tumble, bounce off each other, and settle — it takes about 2–3 seconds. The result is shown in a centered card over the dice, then clears automatically after another 2 seconds.
+
+Dice colours follow the active palette: ink-on-manila by default; greenscreen dice in FIELD mode; lighter paper in BONE.
+
+### What gets logged
+Every roll from the global roller writes an entry to the **active character's** session log (Notes tab) tagged with a blue **ROLL** badge. Example log entries:
+
+- `Roll d20 = 14`
+- `Roll 2d6+3 = 4, 3 +3 → 10`
+- `Roll d100 vs 45 → 37 PASS`
+
+The inline per-skill dice rollers on the Skills tab are unaffected — they continue to work and log as before.
+
+### Limitations
+- The global roller requires a character to be open. It's hidden on the Roster / Wizard screens.
+- Roll history is **per session** — refreshing the page clears it. (The per-character session log, however, is persistent across sessions.)
+- Modifiers must be additive/subtractive numbers (`+3`, `-2`). Advanced notation (drop-lowest, advantage) isn't supported — Delta Green doesn't use those mechanics.
+- Future: when campaign mode ships, Handler will get a real-time feed of players' rolls (their own rolls stay private).
 
 ---
 

@@ -9,6 +9,7 @@ const SOURCE_BADGES = {
   bond:        { label: "PROJ", color: "var(--stamp-blue)", bg: "rgba(31,58,107,0.12)" },
   san:         { label: "SAN", color: "var(--redact-2)", bg: "var(--redact-wash)" },
   unnatural:   { label: "UNNAT", color: "var(--ink-2)", bg: "var(--line-soft)" },
+  roll:        { label: "ROLL", color: "var(--stamp-blue)", bg: "rgba(31,58,107,0.08)" },
 };
 
 export const NotesTab = memo(function NotesTab({ activeChar, isKIA, isLocked, isRedacted, updateChar, addLogEntry, setClearLogOpen }) {

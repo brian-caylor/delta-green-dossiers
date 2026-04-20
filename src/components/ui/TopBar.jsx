@@ -1,5 +1,6 @@
 import { useAuth } from "../../hooks/useAuth.js";
 import ThemeSwitcher from "./ThemeSwitcher";
+import DiceButton from "../dice/DiceButton.jsx";
 
 function Crest() {
   return (
@@ -22,6 +23,7 @@ export default function TopBar() {
         DG OPERATIONS
       </div>
       <div className="topbar-right">
+        <DiceButton />
         <ThemeSwitcher />
         <span title={user?.email}>{displayName.toUpperCase()}</span>
         <button type="button" className="btn btn-tiny" onClick={signOut} style={{ background: "transparent", color: "var(--paper)", borderColor: "var(--paper)" }}>

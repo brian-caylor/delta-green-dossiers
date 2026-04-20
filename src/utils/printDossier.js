@@ -245,6 +245,7 @@ function printSessionLog(char) {
     if (source === "bond")        return `<span style="${base};color:#1f3a6b;border-color:#1f3a6b;background:rgba(31,58,107,0.08)">PROJ</span>`;
     if (source === "san")         return `<span style="${base};color:#8c1d1d;border-color:#8c1d1d;background:rgba(140,29,29,0.08)">SAN</span>`;
     if (source === "unnatural")   return `<span style="${base};color:#3a332a;border-color:#6b6254;background:rgba(107,98,84,0.08)">UNNAT</span>`;
+    if (source === "roll")        return `<span style="${base};color:#1f3a6b;border-color:#1f3a6b;background:rgba(31,58,107,0.06)">ROLL</span>`;
     return `<span style="color:#6b6254;font-size:9pt">\u2014</span>`;
   };
 

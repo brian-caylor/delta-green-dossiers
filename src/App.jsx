@@ -20,6 +20,7 @@ import { usePwaInstall } from "./hooks/usePwaInstall";
 
 // ─── UI Components ───
 import { KIABanner, TopBar } from "./components/ui";
+import DiceRollerProvider from "./components/DiceRollerProvider.jsx";
 
 // ─── Tab Panels ───
 import { PersonalTab, StatsTab, SkillsTab, CombatTab, NotesTab } from "./components/tabs";
@@ -389,7 +390,17 @@ function DossierApp() {
     { id: "notes", label: "NOTES", icon: "●" },
   ];
 
+  // Global dice roller → log to the active character's session log.
+  // The callback reads activeChar at call-time (via the entry param), so
+  // changing agents while the panel is open is safe — the next roll
+  // logs to whichever agent is active when the Roll button is pressed.
+  const handleGlobalRoll = (entry) => {
+    const label = formatRollForLog(entry);
+    addLogEntry(label, null, null, "roll");
+  };
+
   return (
+    <DiceRollerProvider onRoll={handleGlobalRoll}>
     <div className="paper" style={{ minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column" }}>
       <TopBar />
       <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
@@ -854,5 +865,24 @@ function DossierApp() {
       )}
       </div>
     </div>
+    </DiceRollerProvider>
   );
+}
+
+// Session-log label format for a global dice roll. Examples:
+//   Roll d100 = 37
+//   Roll d100 vs 45 → 37 PASS
+//   Roll 2d6+3 = 4, 3 +3 → 10
+function formatRollForLog(entry) {
+  const { formula, total, perGroup, modifier, d100 } = entry;
+  if (d100) {
+    const tag = d100.isCritical ? " CRITICAL" : d100.isFumble ? " FUMBLE" : d100.pass ? " PASS" : " FAIL";
+    return `Roll ${formula} vs ${d100.target}% → ${perGroup[0].rolls[0]}${tag}`;
+  }
+  const rollsDetail = perGroup.map(g => g.rolls.join(", ")).join(" / ");
+  const modStr = modifier ? (modifier > 0 ? ` +${modifier}` : ` ${modifier}`) : "";
+  const multi = perGroup.some(g => g.rolls.length > 1) || modifier !== 0;
+  return multi
+    ? `Roll ${formula} = ${rollsDetail}${modStr} → ${total}`
+    : `Roll ${formula} = ${total}`;
 }
