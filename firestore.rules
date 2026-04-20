@@ -4,49 +4,35 @@ rules_version = '2';
 //
 // Current scope: a user can read/write only their own character docs.
 // Structured so future Handler/Campaign read rules drop in alongside
-// without touching the owner rule below. See the plan's FWD-COMPAT
-// section (Handler / Campaign mode).
+// without touching the owner rule below.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function ownsResource() {
-      return isSignedIn() && request.auth.uid == resource.data.userId;
-    }
-
-    function ownsNewDoc() {
-      return isSignedIn() && request.auth.uid == request.resource.data.userId;
-    }
-
-    // ---------- characters ----------
     match /characters/{charId} {
-      // Owner full access.
-      allow read:   if ownsResource();
-      allow create: if ownsNewDoc();
-      allow update: if ownsResource() && ownsNewDoc();
-      allow delete: if ownsResource();
+      // List + get. For list operations, Firestore must prove the query
+      // filter is at least as restrictive as the rule, so the client's
+      // where("userId", "==", auth.uid) clause is what makes the query
+      // succeed. Inlined (no helper function) so the analyzer can resolve
+      // it reliably.
+      allow list: if request.auth != null
+                  && request.auth.uid == resource.data.userId;
+      allow get:  if request.auth != null
+                  && request.auth.uid == resource.data.userId;
 
-      // [FWD-COMPAT] Future:
-      //   allow read: if isHandlerOfCampaign(resource.data.campaignId);
-      //   plus a peer-presence read restricted to name+userId only,
-      //   implemented via a mirrored public collection written from a
-      //   trigger. See plan "Future compatibility" section.
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+      allow update: if request.auth != null
+                    && request.auth.uid == resource.data.userId
+                    && request.auth.uid == request.resource.data.userId;
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.userId;
     }
 
-    // ---------- profiles (Firebase Auth already holds display_name/photo;
-    // we keep a profiles collection for user-controlled metadata like
-    // preferred theme). A user can read/write only their own profile doc,
-    // keyed by uid.
     match /profiles/{uid} {
-      allow read:   if isSignedIn() && request.auth.uid == uid;
-      allow write:  if isSignedIn() && request.auth.uid == uid;
+      allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
-    // Default deny — explicit is safer than implicit.
     match /{document=**} {
       allow read, write: if false;
     }
