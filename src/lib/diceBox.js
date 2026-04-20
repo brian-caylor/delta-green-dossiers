@@ -73,14 +73,18 @@ async function ensureInstance() {
   return initPromise;
 }
 
-// Kick off the animation for a parsed roll result. We hand the library
+// Kick off the animation for a set of dice groups. We hand the library
 // ONLY the dice groups — modifiers are our math, and bare-die notation
 // like "d100" is rejected by dice-box's parser (needs explicit counts).
-// Build "1d100", "2d6+1d4", etc. from the groups array.
-export async function animate(perGroup) {
+// Build "1d100", "2d6+1d4", etc.
+//
+// Accepts either parsed groups ({count, sides}) or per-group results
+// ({sides, rolls[]}). Older callers passed the latter; the current
+// flow hands parsed groups over so the library can roll its own
+// physics-driven values.
+export async function animate(groups) {
   const box = await ensureInstance();
 
-  // Re-theme if the palette changed since init.
   const newTheme = detectTheme();
   if (newTheme !== currentTheme && box.updateConfig) {
     try {
@@ -89,7 +93,11 @@ export async function animate(perGroup) {
     } catch { /* noop */ }
   }
 
-  const notation = perGroup.map((g) => `${g.rolls.length}d${g.sides}`).join("+");
+  const notation = groups.map((g) => {
+    const count = typeof g.count === "number" ? g.count : Array.isArray(g.rolls) ? g.rolls.length : 1;
+    return `${count}d${g.sides}`;
+  }).join("+");
+
   return box.roll(notation);
 }
 
