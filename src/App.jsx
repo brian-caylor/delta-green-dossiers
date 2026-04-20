@@ -39,9 +39,12 @@ import Wizard from "./components/Wizard.jsx";
 export default function App() {
   const { user, loading } = useAuth();
   if (loading) return (
-    <div style={{ minHeight: "100vh", background: "#1A1D16", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", background: "#1A1D16", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
       <div style={{ color: "#8BA069", fontFamily: "'Special Elite', cursive", fontSize: 18, letterSpacing: 4 }}>
         ACCESSING CLASSIFIED FILES...
+      </div>
+      <div style={{ color: "#5A6A40", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, letterSpacing: 2 }}>
+        [STAGE 1 · AUTH]
       </div>
     </div>
   );
@@ -369,10 +372,11 @@ function DossierApp() {
 
   // ─── Loading screen ───
   if (!loaded) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12 }}>
       <div className="handwritten" style={{ fontSize: 18, letterSpacing: 4, color: "var(--ink-3)" }}>
         ACCESSING CLASSIFIED FILES...
       </div>
+      <div className="label">[STAGE 2 · ROSTER]</div>
     </div>
   );
 

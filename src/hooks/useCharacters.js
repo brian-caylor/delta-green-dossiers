@@ -37,7 +37,15 @@ export function useCharacters() {
     (async () => {
       setLoaded(false);
       setStorageError(null);
-      const { characters: cloudChars, error } = await listCharacters(userId);
+      // Fail-safe: if listCharacters stalls for more than 10 s, bail to cache
+      // mode rather than sitting on the splash forever. listCharacters already
+      // catches errors; this guards against a hung request.
+      const fetched = await Promise.race([
+        listCharacters(userId),
+        new Promise((res) => setTimeout(() => res({ characters: null, error: new Error("Cloud fetch timed out after 10s") }), 10000)),
+      ]);
+      const { characters: cloudChars, error } = fetched;
+      if (error) console.error("[useCharacters] listCharacters error:", error);
       if (cancelled) return;
 
       if (!error && cloudChars) {
