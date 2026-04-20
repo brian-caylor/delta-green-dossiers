@@ -1,21 +1,27 @@
 export { printDossier, printSessionLog };
 
-function printDossier(char, darkMode) {
+// Print always renders in the manila-paper palette, regardless of the
+// in-app theme. `darkMode` is accepted for API compatibility but ignored —
+// greenscreen or bone on paper would be unreadable, and screen-captured
+// print preview always used the light branch anyway.
+function printDossier(char /*, darkMode */) {
   const p = char.personal;
   const s = char.stats;
   const d = char.derived;
 
   const fullName = [p.lastName, [p.firstName, p.middleInitial].filter(Boolean).join(" ")].filter(Boolean).join(", ");
 
-  const bg      = darkMode ? "#111410" : "#FAFAF6";
-  const paper   = darkMode ? "#17191300" : "#FFFFFF";
-  const ink     = darkMode ? "#D4D8C8"  : "#111111";
-  const inkMid  = darkMode ? "#8BA069"  : "#2A4A1A";
-  const inkFade = darkMode ? "#5A6A40"  : "#888888";
-  const border  = darkMode ? "rgba(139,160,105,0.35)" : "#AAAAAA";
-  const cellBg  = darkMode ? "rgba(255,255,255,0.03)" : "#F4F4F0";
-  const headBg  = darkMode ? "rgba(139,160,105,0.15)" : "#E8EDDF";
-  const accent  = darkMode ? "#8BA069"  : "#2A4A1A";
+  // Manila dossier tokens, tuned slightly lighter than the UI for print
+  // legibility. ink ≈ UI's --ink, accent is the restrained redact red.
+  const bg      = "#f5f1e8";   // paper-2
+  const paper   = "#ffffff";
+  const ink     = "#1a1712";   // ink
+  const inkMid  = "#3a332a";   // ink-2
+  const inkFade = "#6b6254";   // ink-3
+  const border  = "rgba(26,23,18,0.35)";
+  const cellBg  = "#f5f1e8";   // paper-2
+  const headBg  = "#ede6d2";   // paper-3 tinted
+  const accent  = "#8c1d1d";   // redact red
 
   const unnaturalEncounters = char.unnaturalEncounters || [];
   const totalUnnatural = unnaturalEncounters.reduce((sum, e) => sum + (Number(e.pts) || 0), 0);
@@ -45,11 +51,13 @@ function printDossier(char, darkMode) {
   const skillRow = (sk) => {
     if (!sk) return `<tr><td colspan="3" style="padding:3px 6px;border-bottom:1px solid ${border}"></td></tr>`;
     const modified = sk.value !== sk.base;
-    const nameColor = sk.custom ? (darkMode ? "#7AAAD4" : "#1A3A6A") : modified ? (darkMode ? "#A0C878" : "#1A4A1A") : ink;
-    return `<tr style="background:${sk.custom ? (darkMode ? "rgba(100,140,200,0.06)" : "#EEF4FF") : "transparent"}">
+    const stampBlue = "#1f3a6b";  // stamp-blue token
+    const nameColor = sk.custom ? stampBlue : modified ? accent : ink;
+    const valueColor = modified ? accent : ink;
+    return `<tr style="background:${sk.custom ? "rgba(31,58,107,0.06)" : "transparent"}">
       <td style="padding:3px 6px;border-bottom:1px solid ${border};font-size:9pt;color:${nameColor};font-weight:${modified ? 600 : 400}">${sk.name}</td>
       <td style="padding:3px 6px;border-bottom:1px solid ${border};font-size:8pt;color:${inkFade};text-align:center;font-family:monospace">${sk.base}%</td>
-      <td style="padding:3px 6px;border-bottom:1px solid ${border};font-size:10pt;color:${modified ? (darkMode ? "#A0C878" : "#1A4A1A") : ink};text-align:center;font-weight:${modified ? 700 : 400};font-family:monospace">${sk.value ?? sk.base}%</td>
+      <td style="padding:3px 6px;border-bottom:1px solid ${border};font-size:10pt;color:${valueColor};text-align:center;font-weight:${modified ? 700 : 400};font-family:monospace">${sk.value ?? sk.base}%</td>
     </tr>`;
   };
 
@@ -126,7 +134,7 @@ function printDossier(char, darkMode) {
     </div>`;
 
   const sanBox = (checked) => `<span style="display:inline-block;width:12px;height:12px;border:1.5px solid ${border};border-radius:2px;margin-right:4px;vertical-align:middle;background:${checked ? accent : "transparent"};position:relative">
-    ${checked ? `<span style="position:absolute;top:-2px;left:1px;color:${darkMode ? "#111" : "#FFF"};font-size:10px;font-weight:700">\u2715</span>` : ""}
+    ${checked ? `<span style="position:absolute;top:-2px;left:1px;color:${paper};font-size:10px;font-weight:700">\u2715</span>` : ""}
   </span>`;
 
   const kiaStamp = char.kia ? `
@@ -156,11 +164,11 @@ function printDossier(char, darkMode) {
   </style>
 </head>
 <body>
-<div class="no-print" style="position:sticky;top:0;z-index:99;background:${darkMode ? "#0D0F0A" : "#2A3520"};padding:10px 24px;display:flex;align-items:center;gap:16px;border-bottom:2px solid ${accent}">
-  <span style="font-family:'Special Elite',cursive;font-size:14pt;color:#8BA069;letter-spacing:3px">DD-315 DOSSIER</span>
-  <span style="font-size:9pt;color:#5A6A40;letter-spacing:1px;flex:1">${fullName || "Unnamed Agent"}</span>
-  <button onclick="window.print()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid #8BA069;background:rgba(139,160,105,0.2);color:#A0C878;padding:6px 18px;border-radius:3px;font-size:10pt;letter-spacing:2px;font-weight:600">\u2399 PRINT</button>
-  <button onclick="window.close()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid #664040;background:rgba(140,50,50,0.12);color:#C44040;padding:6px 14px;border-radius:3px;font-size:10pt;letter-spacing:1px">\u2715 CLOSE</button>
+<div class="no-print" style="position:sticky;top:0;z-index:99;background:${ink};padding:10px 24px;display:flex;align-items:center;gap:16px;border-bottom:3px solid ${accent}">
+  <span style="font-family:'Special Elite',cursive;font-size:14pt;color:${paper};letter-spacing:3px">DD-315 DOSSIER</span>
+  <span style="font-size:9pt;color:${bg};letter-spacing:1px;flex:1">${fullName || "Unnamed Agent"}</span>
+  <button onclick="window.print()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid ${paper};background:${paper};color:${ink};padding:6px 18px;font-size:10pt;letter-spacing:2px;font-weight:600">\u2399 PRINT</button>
+  <button onclick="window.close()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid ${accent};background:transparent;color:${accent};padding:6px 14px;font-size:10pt;letter-spacing:1px">\u2715 CLOSE</button>
 </div>
 ${kiaStamp}
 <div class="page">
@@ -227,21 +235,34 @@ function printSessionLog(char) {
     catch { return iso; }
   };
 
+  // Badges use dark ink on manila-tinted backgrounds so they render well on
+  // paper. Semantic accent colour per source type is preserved for quick
+  // scanning at a glance.
   const sourceBadge = (source) => {
-    if (source === "advancement") return `<span style="display:inline-block;background:#1A3A1A;border:1px solid #3A6A3A;color:#60A060;font-size:8pt;padding:1px 6px;border-radius:3px;font-family:monospace;letter-spacing:1px">ADV</span>`;
-    if (source === "kia") return `<span style="display:inline-block;background:#3A1A1A;border:1px solid #6A3A3A;color:#C44040;font-size:8pt;padding:1px 6px;border-radius:3px;font-family:'Special Elite',cursive;letter-spacing:2px">K.I.A.</span>`;
-    if (source === "bond") return `<span style="display:inline-block;background:rgba(80,100,180,0.15);border:1px solid rgba(80,100,180,0.35);color:#7AAAD4;font-size:8pt;padding:1px 6px;border-radius:3px;font-family:monospace;letter-spacing:1px">PROJ</span>`;
-    if (source === "san") return `<span style="display:inline-block;background:rgba(110,60,140,0.15);border:1px solid rgba(110,60,140,0.35);color:#9060A0;font-size:8pt;padding:1px 6px;border-radius:3px;font-family:monospace;letter-spacing:1px">SAN</span>`;
-    if (source === "unnatural") return `<span style="display:inline-block;background:rgba(80,160,130,0.12);border:1px solid rgba(80,160,130,0.3);color:#60A890;font-size:8pt;padding:1px 6px;border-radius:3px;font-family:monospace;letter-spacing:1px">UNNAT</span>`;
-    return `<span style="color:#888;font-size:9pt">\u2014</span>`;
+    const base = "display:inline-block;font-size:8pt;padding:1px 6px;border:1px solid;font-family:'IBM Plex Mono',monospace;letter-spacing:1px";
+    if (source === "advancement") return `<span style="${base};color:#2d5a3d;border-color:#2d5a3d;background:rgba(45,90,61,0.08)">ADV</span>`;
+    if (source === "kia")         return `<span style="${base};color:#8c1d1d;border-color:#8c1d1d;background:rgba(140,29,29,0.08);font-family:'Special Elite',cursive;letter-spacing:2px">K.I.A.</span>`;
+    if (source === "bond")        return `<span style="${base};color:#1f3a6b;border-color:#1f3a6b;background:rgba(31,58,107,0.08)">PROJ</span>`;
+    if (source === "san")         return `<span style="${base};color:#8c1d1d;border-color:#8c1d1d;background:rgba(140,29,29,0.08)">SAN</span>`;
+    if (source === "unnatural")   return `<span style="${base};color:#3a332a;border-color:#6b6254;background:rgba(107,98,84,0.08)">UNNAT</span>`;
+    return `<span style="color:#6b6254;font-size:9pt">\u2014</span>`;
   };
 
+  // Manila-paper palette for the session log print.
+  const INK        = "#1a1712";
+  const INK_FADE   = "#6b6254";
+  const ACCENT     = "#8c1d1d";
+  const PAPER      = "#ffffff";
+  const PAPER_BG   = "#f5f1e8";
+  const HEAD_BG    = "#ede6d2";
+  const BORDER     = "rgba(26,23,18,0.35)";
+
   const rows = log.length === 0
-    ? `<tr><td colspan="3" style="padding:16px;text-align:center;color:#888;font-style:italic">No session log entries recorded.</td></tr>`
+    ? `<tr><td colspan="3" style="padding:16px;text-align:center;color:${INK_FADE};font-style:italic">No session log entries recorded.</td></tr>`
     : log.map(e => `<tr>
-        <td style="padding:6px 10px;border-bottom:1px solid #DDD;font-size:9pt;color:#555;white-space:nowrap">${fmtDate(e.timestamp)}</td>
-        <td style="padding:6px 10px;border-bottom:1px solid #DDD;font-size:10pt;color:#111;font-family:monospace">${e.label || ""}</td>
-        <td style="padding:6px 10px;border-bottom:1px solid #DDD;text-align:center">${sourceBadge(e.source)}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid ${BORDER};font-size:9pt;color:${INK_FADE};white-space:nowrap;font-family:'IBM Plex Mono',monospace">${fmtDate(e.timestamp)}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid ${BORDER};font-size:10pt;color:${INK};font-family:'IBM Plex Mono',monospace">${e.label || ""}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid ${BORDER};text-align:center">${sourceBadge(e.source)}</td>
       </tr>`).join("");
 
   const html = `<!DOCTYPE html>
@@ -253,8 +274,8 @@ function printSessionLog(char) {
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: #FFF; color: #111; font-family: 'IBM Plex Sans', sans-serif; font-size: 10pt; }
-    .page { width: 8.27in; min-height: 11in; margin: 0 auto; padding: 0.5in 0.55in; }
+    html, body { background: ${PAPER_BG}; color: ${INK}; font-family: 'IBM Plex Sans', sans-serif; font-size: 10pt; }
+    .page { width: 8.27in; min-height: 11in; margin: 0 auto; padding: 0.5in 0.55in; background: ${PAPER}; }
     table { border-collapse: collapse; width: 100%; }
     @media print {
       html, body { background: white !important; }
@@ -265,23 +286,23 @@ function printSessionLog(char) {
   </style>
 </head>
 <body>
-<div class="no-print" style="position:sticky;top:0;z-index:99;background:#2A3520;padding:10px 24px;display:flex;align-items:center;gap:16px;border-bottom:2px solid #8BA069">
-  <span style="font-family:'Special Elite',cursive;font-size:14pt;color:#8BA069;letter-spacing:3px">SESSION LOG</span>
-  <span style="font-size:9pt;color:#5A6A40;letter-spacing:1px;flex:1">${fullName}</span>
-  <button onclick="window.print()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid #8BA069;background:rgba(139,160,105,0.2);color:#A0C878;padding:6px 18px;border-radius:3px;font-size:10pt;letter-spacing:2px">\u2399 PRINT</button>
-  <button onclick="window.close()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid #664040;background:rgba(140,50,50,0.12);color:#C44040;padding:6px 14px;border-radius:3px;font-size:10pt;letter-spacing:1px">\u2715 CLOSE</button>
+<div class="no-print" style="position:sticky;top:0;z-index:99;background:${INK};padding:10px 24px;display:flex;align-items:center;gap:16px;border-bottom:3px solid ${ACCENT}">
+  <span style="font-family:'Special Elite',cursive;font-size:14pt;color:${PAPER};letter-spacing:3px">SESSION LOG</span>
+  <span style="font-size:9pt;color:${PAPER_BG};letter-spacing:1px;flex:1">${fullName}</span>
+  <button onclick="window.print()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid ${PAPER};background:${PAPER};color:${INK};padding:6px 18px;font-size:10pt;letter-spacing:2px">\u2399 PRINT</button>
+  <button onclick="window.close()" style="font-family:'Special Elite',cursive;cursor:pointer;border:1px solid ${ACCENT};background:transparent;color:${ACCENT};padding:6px 14px;font-size:10pt;letter-spacing:1px">\u2715 CLOSE</button>
 </div>
 <div class="page">
-  <div style="margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #2A4A1A">
-    <div style="font-family:'Special Elite',cursive;font-size:18pt;color:#2A4A1A;letter-spacing:4px;margin-bottom:4px">DELTA GREEN</div>
-    <div style="font-size:9pt;color:#666;letter-spacing:2px">AGENT SESSION LOG \u2014 ${fullName}</div>
-    <div style="font-size:8pt;color:#999;margin-top:4px">Generated: ${fmtDate(new Date().toISOString())} \u00b7 ${log.length} entr${log.length !== 1 ? "ies" : "y"}</div>
+  <div style="margin-bottom:20px;padding-bottom:12px;border-bottom:3px solid ${ACCENT}">
+    <div style="font-family:'Special Elite',cursive;font-size:18pt;color:${INK};letter-spacing:4px;margin-bottom:4px">DELTA GREEN</div>
+    <div style="font-size:9pt;color:${INK_FADE};letter-spacing:2px">AGENT SESSION LOG \u2014 ${fullName}</div>
+    <div style="font-size:8pt;color:${INK_FADE};margin-top:4px">Generated: ${fmtDate(new Date().toISOString())} \u00b7 ${log.length} entr${log.length !== 1 ? "ies" : "y"}</div>
   </div>
   <table>
-    <thead><tr style="background:#E8EDDF"><th style="padding:6px 10px;text-align:left;font-size:8pt;color:#555;font-weight:400;font-family:'Special Elite',cursive;letter-spacing:1px">DATE</th><th style="padding:6px 10px;text-align:left;font-size:8pt;color:#555;font-weight:400;font-family:'Special Elite',cursive;letter-spacing:1px">CHANGE</th><th style="padding:6px 10px;text-align:center;font-size:8pt;color:#555;font-weight:400;font-family:'Special Elite',cursive;letter-spacing:1px;width:80px">SOURCE</th></tr></thead>
+    <thead><tr style="background:${HEAD_BG}"><th style="padding:6px 10px;text-align:left;font-size:8pt;color:${INK_FADE};font-weight:400;font-family:'Special Elite',cursive;letter-spacing:1px">DATE</th><th style="padding:6px 10px;text-align:left;font-size:8pt;color:${INK_FADE};font-weight:400;font-family:'Special Elite',cursive;letter-spacing:1px">CHANGE</th><th style="padding:6px 10px;text-align:center;font-size:8pt;color:${INK_FADE};font-weight:400;font-family:'Special Elite',cursive;letter-spacing:1px;width:80px">SOURCE</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
-  <div style="margin-top:24px;padding-top:8px;border-top:1px solid #DDD;display:flex;justify-content:space-between;align-items:center"><div style="font-size:7.5pt;color:#999;font-family:monospace">DD 315 \u2014 DELTA GREEN \u2014 AGENT SESSION LOG</div><div style="font-size:7.5pt;color:#999">TOP SECRET // ORCON</div></div>
+  <div style="margin-top:24px;padding-top:8px;border-top:1px solid ${BORDER};display:flex;justify-content:space-between;align-items:center"><div style="font-size:7.5pt;color:${INK_FADE};font-family:monospace">DD 315 \u2014 DELTA GREEN \u2014 AGENT SESSION LOG</div><div style="font-size:7.5pt;color:${INK_FADE}">TOP SECRET // ORCON</div></div>
 </div>
 </body>
 </html>`;
