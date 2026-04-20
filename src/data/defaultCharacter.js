@@ -1,9 +1,10 @@
 import { DEFAULT_SKILLS } from "./defaultSkills";
 import { EMPTY_WEAPON } from "./gearCatalog";
+import { newId } from "../utils/uuid.js";
 
 export function createNewCharacter() {
   return {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    id: newId(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     kia: false,

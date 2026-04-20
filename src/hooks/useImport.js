@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { extractFormFields, parseDeltaGreenSheet, buildCharacterFromParsed } from "../utils/pdfImport";
 import { createNewCharacter } from "../data/defaultCharacter";
+import { newId } from "../utils/uuid.js";
 
 export function useImport(setCharacters, setActiveId, setTab, setConfirmDialog) {
   const [importState, setImportState] = useState({ active: false, status: "", phase: "", error: null });
@@ -53,7 +54,7 @@ export function useImport(setCharacters, setActiveId, setTab, setConfirmDialog) 
         if (!parsed.id || !parsed.personal || !parsed.stats) throw new Error("Invalid backup");
         const restored = {
           ...parsed,
-          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+          id: newId(),
           updatedAt: new Date().toISOString(),
         };
         setCharacters(prev => [...prev, restored]);

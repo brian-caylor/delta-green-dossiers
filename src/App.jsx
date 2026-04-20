@@ -9,6 +9,7 @@ import { createNewCharacter } from "./data/defaultCharacter";
 import { printDossier } from "./utils/printDossier";
 import { charName } from "./utils/textHelpers";
 import { calcSanMax } from "./utils/statDerivation";
+import { newId } from "./utils/uuid.js";
 
 // ─── Hooks ───
 import { useCharacters } from "./hooks/useCharacters";
@@ -26,8 +27,25 @@ import { PersonalTab, StatsTab, SkillsTab, CombatTab, NotesTab } from "./compone
 // ─── Modals ───
 import { ImportReviewModal, SessionEndModal, SanEventModal, SanProjectionModal, UnnaturalAddForm, GearCatalogModal, ImportChoiceModal } from "./components/modals";
 
-// ─── Main App ───
-export default function DeltaGreenApp() {
+// ─── Auth ───
+import { useAuth } from "./hooks/useAuth.js";
+import LoginScreen from "./components/LoginScreen.jsx";
+
+// ─── Main entry: auth gate, then dossier app ───
+export default function App() {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#1A1D16", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ color: "#8BA069", fontFamily: "'Special Elite', cursive", fontSize: 18, letterSpacing: 4 }}>
+        ACCESSING CLASSIFIED FILES...
+      </div>
+    </div>
+  );
+  if (!user) return <LoginScreen />;
+  return <DossierApp />;
+}
+
+function DossierApp() {
   const [tab, setTab] = useState("stats");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showRedactions, setShowRedactions] = useState(true);
@@ -106,7 +124,7 @@ export default function DeltaGreenApp() {
   const duplicateCharacter = (id) => {
     const src = characters.find(c => c.id === id);
     if (!src) return;
-    const dup = { ...JSON.parse(JSON.stringify(src)), id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const dup = { ...JSON.parse(JSON.stringify(src)), id: newId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     dup.personal.lastName = dup.personal.lastName + " (Copy)";
     dup.kia = false; dup.kiaDate = null;
     setCharacters(prev => [...prev, dup]);
