@@ -20,6 +20,10 @@ dist-ssr
 # Local-only troubleshooting notes
 TROUBLESHOOTING.md
 
+# Session handoff notes (local-only, session-specific)
+HANDOFF.md
+.claude/handoffs/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
