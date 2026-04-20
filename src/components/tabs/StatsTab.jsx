@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useRef } from "react";
 import { CollapsibleSection, NumField, Field, StatBar, SheetBox } from "../ui";
 import { calcHpMax, calcWpMax, calcSanMax } from "../../utils/statDerivation";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
@@ -61,17 +61,32 @@ export const StatsTab = memo(function StatsTab({ activeChar, isKIA, isLocked, is
     updateChar(c => ({ ...c, stats: { ...c.stats, [key]: { ...c.stats[key], features: v } } }));
   }, [updateChar]);
 
-  const updateDerivedCurrent = useCallback((key, abbr, v) => {
-    const from = Number(activeChar.derived[key].current) || 0;
-    const to = Number(v) || 0;
+  // Silent value update — no log, no modal. Fires on every keystroke/spinner
+  // click. Side effects (log entry, SAN event modal, KIA prompt) are deferred
+  // to blur so the user can fully adjust the number before committing.
+  const updateDerivedCurrent = useCallback((key, v) => {
     updateChar(c => ({ ...c, derived: { ...c.derived, [key]: { ...c.derived[key], current: v } } }));
-    if (from !== to) addLogEntry(`${abbr} ${from}→${to}`, from, to, "manual");
+  }, [updateChar]);
+
+  // Track the value when the field gained focus so blur can diff against it.
+  const preEditRef = useRef({});
+
+  const handleDerivedFocus = useCallback((key) => () => {
+    preEditRef.current[key] = Number(activeChar.derived[key].current) || 0;
+  }, [activeChar]);
+
+  const handleDerivedBlur = useCallback((key, abbr) => () => {
+    const from = preEditRef.current[key];
+    const to = Number(activeChar.derived[key].current) || 0;
+    if (from == null || from === to) return;
+    addLogEntry(`${abbr} ${from}→${to}`, from, to, "manual");
     if (key === "hp" && to <= 0 && !isKIA) setKiaConfirmOpen("hp");
     if (key === "san" && to < from) {
       setSanEventData({ loss: from - to, from, to });
       setSanEventOpen(true);
     }
-  }, [activeChar, isKIA, updateChar, addLogEntry, setKiaConfirmOpen, setSanEventData, setSanEventOpen]);
+    preEditRef.current[key] = to;
+  }, [activeChar, isKIA, addLogEntry, setKiaConfirmOpen, setSanEventData, setSanEventOpen]);
 
   const updateDerivedMax = useCallback((key, v) => {
     updateChar(c => ({ ...c, derived: { ...c.derived, [key]: { ...c.derived[key], max: v } } }));
@@ -136,7 +151,9 @@ export const StatsTab = memo(function StatsTab({ activeChar, isKIA, isLocked, is
                     value={activeChar.derived[attr.key].current}
                     highlight={!isLocked}
                     disabled={isLocked}
-                    onChange={v => updateDerivedCurrent(attr.key, attr.abbr, v)}
+                    onChange={v => updateDerivedCurrent(attr.key, v)}
+                    onFocus={handleDerivedFocus(attr.key)}
+                    onBlur={handleDerivedBlur(attr.key, attr.abbr)}
                   />
                   <div title={maxTooltip(attr.key)} style={{ cursor: isMaxReadOnly(attr.key) ? "help" : undefined }}>
                     <NumField

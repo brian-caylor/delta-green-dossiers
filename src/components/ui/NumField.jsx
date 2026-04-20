@@ -1,6 +1,6 @@
 import React from "react";
 
-export const NumField = React.memo(({ label, value, onChange, min, max, width, highlight, disabled, redacted }) => {
+export const NumField = React.memo(({ label, value, onChange, onFocus, onBlur, min, max, width, highlight, disabled, redacted }) => {
   const labelEl = label && (
     <label className="label" style={{ textAlign: "center", userSelect: "none" }}>{label}</label>
   );
@@ -29,6 +29,8 @@ export const NumField = React.memo(({ label, value, onChange, min, max, width, h
         min={min}
         max={max}
         disabled={disabled}
+        onFocus={onFocus}
+        onBlur={onBlur}
         onChange={(e) => onChange(e.target.value === "" ? "" : Number(e.target.value))}
         style={{
           background: highlight ? "var(--redact-wash)" : undefined,
