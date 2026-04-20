@@ -522,25 +522,6 @@ body.theme-greenscreen .paper {
   padding-bottom: 6px;
 }
 
-.dice-sign-toggle {
-  align-self: flex-end;
-  margin-bottom: 1px;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.dice-sign-toggle:hover {
-  border-color: var(--ink);
-  color: var(--ink);
-}
-
 .dice-advanced-formula {
   font-family: var(--font-hand);
   font-size: 18px;

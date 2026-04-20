@@ -72,8 +72,11 @@ async function ensureInstance() {
   return initPromise;
 }
 
-// Kick off the animation for a formula. Resolves when dice settle.
-export async function animate(formula) {
+// Kick off the animation for a parsed roll result. We hand the library
+// ONLY the dice groups — modifiers are our math, and bare-die notation
+// like "d100" is rejected by dice-box's parser (needs explicit counts).
+// Build "1d100", "2d6+1d4", etc. from the groups array.
+export async function animate(perGroup) {
   const box = await ensureInstance();
 
   // Re-theme if the palette changed since init.
@@ -85,7 +88,8 @@ export async function animate(formula) {
     } catch { /* noop */ }
   }
 
-  return box.roll(formula);
+  const notation = perGroup.map((g) => `${g.rolls.length}d${g.sides}`).join("+");
+  return box.roll(notation);
 }
 
 export async function clearScene() {

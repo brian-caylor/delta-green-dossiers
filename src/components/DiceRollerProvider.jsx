@@ -51,7 +51,7 @@ export default function DiceRollerProvider({ onRoll, children }) {
     // Let the dice tumble first; reveal the result card only once they
     // settle (or once we confirm the animation isn't going to play).
     try {
-      await animate(result.formula);
+      await animate(result.perGroup);
     } catch (err) {
       console.warn("[dice] animation skipped — falling back to numeric result:", err?.message || err);
     }

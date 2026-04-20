@@ -92,6 +92,7 @@ export default function DiceRollerPanel() {
             onChange={(v) => setCount(clamp(v, 1, 50))}
             min={1}
             max={50}
+            width={46}
           />
           <span className="dice-advanced-op">×</span>
           <SelectField
@@ -99,23 +100,19 @@ export default function DiceRollerPanel() {
             value={sides}
             onChange={(v) => setSides(Number(v))}
             options={DIE_SIDES.map((s) => ({ value: s, label: `d${s}` }))}
+            width={72}
           />
-          <span className="dice-advanced-op">{modifier >= 0 ? "+" : "−"}</span>
+          {/* Signed modifier — native up/down arrows step from 0 down
+              into negatives and up into positives. The displayed sign
+              IS the value. No separate operator glyph. */}
           <NumberField
             label="MOD"
-            value={Math.abs(modifier)}
-            onChange={(v) => setModifier(modifier < 0 ? -Math.abs(v) : Math.abs(v))}
-            min={0}
+            value={modifier}
+            onChange={(v) => setModifier(clamp(v, -99, 99))}
+            min={-99}
             max={99}
+            width={58}
           />
-          <button
-            type="button"
-            className="dice-sign-toggle"
-            onClick={() => setModifier(-modifier)}
-            title="Toggle modifier sign"
-          >
-            {modifier < 0 ? "−" : "+"}
-          </button>
         </div>
 
         <div className="dice-advanced-formula">{advancedFormula}</div>
@@ -206,31 +203,35 @@ function HistoryRow({ entry }) {
   );
 }
 
-function NumberField({ label, value, onChange, min, max }) {
+function NumberField({ label, value, onChange, min, max, width }) {
   return (
     <div className="dice-number-field">
       <label className="label">{label}</label>
       <input
         type="number"
         className="field-num"
+        style={width ? { width } : undefined}
         value={value}
         min={min}
         max={max}
         onChange={(e) => {
-          const n = parseInt(e.target.value, 10);
-          onChange(Number.isNaN(n) ? min : n);
+          const raw = e.target.value;
+          if (raw === "" || raw === "-") { onChange(0); return; }
+          const n = parseInt(raw, 10);
+          onChange(Number.isNaN(n) ? 0 : n);
         }}
       />
     </div>
   );
 }
 
-function SelectField({ label, value, onChange, options }) {
+function SelectField({ label, value, onChange, options, width }) {
   return (
     <div className="dice-number-field">
       <label className="label">{label}</label>
       <select
         className="dice-select"
+        style={width ? { width } : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
