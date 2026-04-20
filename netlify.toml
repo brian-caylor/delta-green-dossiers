@@ -5,9 +5,24 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Proxy Firebase Auth handler + config JSON through this domain so the
+# auth cookies are first-party. Without this, Chrome/Safari treat the
+# firebaseapp.com session cookies as third-party and signInWithRedirect
+# loops back to the login screen without completing. These redirects
+# must come BEFORE the SPA fallback or they get swallowed.
+[[redirects]]
+  from = "/__/auth/*"
+  to = "https://deltagreendossier.firebaseapp.com/__/auth/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/__/firebase/*"
+  to = "https://deltagreendossier.firebaseapp.com/__/firebase/:splat"
+  status = 200
+  force = true
+
 # SPA fallback — let React handle client routing/screen state.
-# Supabase auth callback URLs are configured in the Supabase dashboard
-# and served by supabase.co, so they do not need a redirect rule here.
 [[redirects]]
   from = "/*"
   to = "/index.html"
