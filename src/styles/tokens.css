@@ -1,0 +1,71 @@
+/* Delta Green Dossiers — design tokens.
+ *
+ * Ported from the Claude Design prototype. Three palettes share the same
+ * token names; body.theme-* classes override :root for the non-default
+ * palettes. Every restyled component should read from these vars, never
+ * hardcode colors.
+ *
+ * Source of truth for palette values: the Claude Design prototype at
+ * /Users/briancaylor/Downloads/Delta Green character sheet/styles.css.
+ */
+
+:root {
+  /* Paper tones — manila dossier (default) */
+  --paper: #e8e0cf;
+  --paper-2: #ded4be;
+  --paper-3: #cfc3a8;
+  --paper-shadow: #b8ab8b;
+
+  /* Ink */
+  --ink: #1a1712;
+  --ink-2: #3a332a;
+  --ink-3: #6b6254;
+  --ink-muted: #8a8070;
+
+  /* Classified red — restrained */
+  --redact: #8c1d1d;
+  --redact-2: #a42626;
+  --redact-wash: rgba(140, 29, 29, 0.08);
+
+  /* Stamp blue — very rare */
+  --stamp-blue: #1f3a6b;
+
+  /* Sanity green */
+  --ok: #2d5a3d;
+
+  --line: rgba(26, 23, 18, 0.35);
+  --line-2: rgba(26, 23, 18, 0.18);
+  --line-soft: rgba(26, 23, 18, 0.1);
+
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-hand: 'Special Elite', 'Courier New', monospace;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+/* Greenscreen — retro terminal */
+body.theme-greenscreen {
+  background: #0a0f0a;
+  --paper: #0f1a10;
+  --paper-2: #142014;
+  --paper-3: #1b2a1b;
+  --ink: #a8ff9a;
+  --ink-2: #7fcf74;
+  --ink-3: #5a9a52;
+  --ink-muted: #3e6b38;
+  --redact: #ff5a5a;
+  --line: rgba(168,255,154,0.3);
+  --line-2: rgba(168,255,154,0.15);
+}
+
+/* Bone — clean white */
+body.theme-bone {
+  --paper: #f5f1e8;
+  --paper-2: #ebe5d4;
+}
+
+/* Manila is the default (no class) — workspace background for
+ * paper-bordered screens. */
+body.theme-manila,
+body:not(.theme-greenscreen):not(.theme-bone) {
+  background: #2a251e;
+}

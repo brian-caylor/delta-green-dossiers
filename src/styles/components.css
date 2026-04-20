@@ -1,0 +1,337 @@
+/* Delta Green Dossiers — component primitives.
+ *
+ * Ported from the Claude Design prototype. Every class here reads from
+ * tokens.css, so palette switching (manila / bone / greenscreen) works
+ * for free. Component JSX in src/components/ consumes these classes.
+ */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.4;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { min-height: 100vh; }
+
+/* ===== Paper background with grain ===== */
+.paper {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(0,0,0,0.025) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(0,0,0,0.03) 0%, transparent 35%),
+    radial-gradient(circle at 50% 90%, rgba(140,29,29,0.015) 0%, transparent 50%);
+}
+
+body.theme-greenscreen .paper {
+  background-image: none;
+  background-color: var(--paper);
+}
+
+.paper-edge {
+  box-shadow:
+    inset 0 0 0 1px rgba(26,23,18,0.1),
+    0 1px 0 rgba(255,255,255,0.3) inset,
+    0 20px 40px -20px rgba(0,0,0,0.5);
+}
+
+/* ===== Typography ===== */
+.mono { font-family: var(--font-mono); }
+.hand { font-family: var(--font-hand); }
+.sans { font-family: var(--font-sans); }
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.label-lg {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.heading {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.handwritten {
+  font-family: var(--font-hand);
+  color: var(--ink);
+}
+
+.classified-bar {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-size: 11px;
+  display: inline-block;
+}
+
+.redact-bar {
+  background: var(--redact);
+  color: var(--paper);
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 11px;
+  display: inline-block;
+}
+
+.redacted {
+  background: var(--ink);
+  color: var(--ink);
+  user-select: none;
+  display: inline-block;
+  padding: 0 4px;
+}
+
+/* ===== Form fields ===== */
+.field { display: flex; flex-direction: column; gap: 4px; }
+
+.field-line {
+  border: none;
+  border-bottom: 1px solid var(--ink-2);
+  background: transparent;
+  font-family: var(--font-hand);
+  font-size: 16px;
+  color: var(--ink);
+  padding: 4px 2px;
+  outline: none;
+  width: 100%;
+}
+.field-line:focus { border-bottom-color: var(--redact); background: rgba(255,255,255,0.25); }
+
+.field-box {
+  border: 1px solid var(--ink-2);
+  background: rgba(255,255,255,0.2);
+  font-family: var(--font-hand);
+  font-size: 15px;
+  color: var(--ink);
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+  resize: vertical;
+}
+.field-box:focus { border-color: var(--redact); background: rgba(255,255,255,0.35); }
+
+.field-num {
+  border: 1px solid var(--ink-2);
+  background: rgba(255,255,255,0.3);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 4px;
+  outline: none;
+  width: 100%;
+  text-align: center;
+}
+.field-num:focus { border-color: var(--redact); background: #fff; }
+
+/* ===== Buttons ===== */
+.btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 10px 18px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn-primary { background: var(--ink); color: var(--paper); }
+.btn-primary:hover { background: var(--redact); border-color: var(--redact); }
+.btn-danger { border-color: var(--redact); color: var(--redact); }
+.btn-danger:hover { background: var(--redact); color: var(--paper); }
+.btn-ghost { border: 1px solid var(--line); background: transparent; }
+.btn-sm { padding: 6px 12px; font-size: 10px; }
+.btn-tiny { padding: 3px 7px; font-size: 9px; letter-spacing: 0.12em; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== Stamp ===== */
+.stamp {
+  display: inline-block;
+  border: 3px double var(--redact);
+  color: var(--redact);
+  padding: 4px 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 12px;
+  transform: rotate(-3deg);
+  opacity: 0.85;
+}
+.stamp-blue { border-color: var(--stamp-blue); color: var(--stamp-blue); }
+
+/* ===== Checkbox ===== */
+.check {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink-2);
+  background: rgba(255,255,255,0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+.check.checked { background: var(--ink); }
+.check.checked::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 10px;
+  border: solid var(--paper);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -2px);
+}
+.check.filled { background: var(--redact); border-color: var(--redact); }
+.check.filled::after { display: none; }
+
+/* ===== Pip (HP/WP/SAN tracker) ===== */
+.pip {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--ink);
+  background: rgba(255,255,255,0.3);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.pip.on { background: var(--ink); color: var(--paper); }
+.pip.ko { background: var(--redact); border-color: var(--redact); color: var(--paper); }
+
+/* ===== Dividers ===== */
+.divider { border: none; border-top: 1px dashed var(--ink-2); margin: 12px 0; }
+.divider-solid { border: none; border-top: 1px solid var(--ink); margin: 14px 0; }
+.divider-double { border: none; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); height: 3px; margin: 14px 0; }
+
+/* ===== Tables ===== */
+.table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 13px; }
+.table th {
+  text-align: left;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 6px 8px;
+  border-bottom: 1.5px solid var(--ink);
+  font-weight: 600;
+}
+.table td { padding: 6px 8px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
+.table tr:last-child td { border-bottom: none; }
+
+/* ===== Sheet box ===== */
+.sheet-box {
+  border: 1.5px solid var(--ink);
+  padding: 14px;
+  position: relative;
+  background: rgba(255,255,255,0.1);
+}
+.sheet-box-title {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  background: var(--paper);
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* ===== Utility ===== */
+.row { display: flex; gap: 12px; align-items: center; }
+.col { display: flex; flex-direction: column; gap: 12px; }
+.grow { flex: 1; }
+.muted { color: var(--ink-3); }
+.muted-2 { color: var(--ink-muted); }
+.small { font-size: 11px; }
+.tiny { font-size: 10px; }
+.bold { font-weight: 700; }
+.center { text-align: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* ===== Top bar ===== */
+.topbar {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--redact);
+}
+.topbar-crest { display: flex; align-items: center; gap: 14px; font-weight: 700; }
+.topbar-right { display: flex; align-items: center; gap: 18px; font-size: 10px; color: var(--ink-muted); }
+
+/* ===== Theme switcher ===== */
+.theme-switcher {
+  display: inline-flex;
+  gap: 4px;
+  border: 1px solid var(--ink-muted);
+  padding: 2px;
+}
+.theme-switcher button {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  border: none;
+  cursor: pointer;
+}
+.theme-switcher button.active {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink-3); border: 2px solid var(--paper-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink); }

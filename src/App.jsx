@@ -19,7 +19,7 @@ import { useImport } from "./hooks/useImport";
 import { usePwaInstall } from "./hooks/usePwaInstall";
 
 // ─── UI Components ───
-import { KIABanner } from "./components/ui";
+import { KIABanner, TopBar } from "./components/ui";
 
 // ─── Tab Panels ───
 import { PersonalTab, StatsTab, SkillsTab, CombatTab, NotesTab } from "./components/tabs";
@@ -334,8 +334,8 @@ function DossierApp() {
 
   // ─── Loading screen ───
   if (!loaded) return (
-    <div style={{ minHeight: "100vh", background: "#1A1D16", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ color: "#8BA069", fontFamily: "'Special Elite', cursive", fontSize: 18, letterSpacing: 4, animation: "pulse 1.5s infinite" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="handwritten" style={{ fontSize: 18, letterSpacing: 4, color: "var(--ink-3)" }}>
         ACCESSING CLASSIFIED FILES...
       </div>
     </div>
@@ -350,7 +350,9 @@ function DossierApp() {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", width: "100%", background: "#1A1D16", color: "#D4D8C8", fontFamily: "'IBM Plex Sans', sans-serif", display: "flex" }}>
+    <div style={{ minHeight: "100vh", width: "100%", color: "#D4D8C8", fontFamily: "'IBM Plex Sans', sans-serif", background: "#1A1D16", display: "flex", flexDirection: "column" }}>
+      <TopBar />
+      <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
 
       {/* Hidden file input for PDF import */}
       <input type="file" ref={fileInputRef} accept=".pdf" onChange={handleFileSelect} style={{ display: "none" }} />
@@ -828,6 +830,7 @@ function DossierApp() {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );
