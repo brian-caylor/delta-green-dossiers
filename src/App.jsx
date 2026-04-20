@@ -69,6 +69,7 @@ function DossierApp() {
     loaded,
     activeChar,
     storageError, setStorageError,
+    readOnly,
     updateChar, addLogEntry,
   } = useCharacters();
 
@@ -397,11 +398,16 @@ function DossierApp() {
       <input type="file" ref={fileInputRef} accept=".pdf" onChange={handleFileSelect} style={{ display: "none" }} />
       <input type="file" ref={jsonInputRef} accept=".json" onChange={handleJsonImport} style={{ display: "none" }} />
 
-      {/* Storage Error Banner */}
+      {/* Storage Error Banner — non-dismissible while read-only so the user
+          can't hide the offline indicator and then think their edits are
+          saving. Transient save errors (online, cloudReachable briefly
+          flickered) remain dismissible. */}
       {storageError && (
         <div className="redact-bar" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, padding: "8px 16px", letterSpacing: 1 }}>
           <span style={{ flex: 1 }}>{storageError}</span>
-          <button type="button" className="btn btn-tiny" style={{ color: "var(--paper)", borderColor: "var(--paper)", background: "transparent" }} onClick={() => setStorageError(null)}>Dismiss</button>
+          {!readOnly && (
+            <button type="button" className="btn btn-tiny" style={{ color: "var(--paper)", borderColor: "var(--paper)", background: "transparent" }} onClick={() => setStorageError(null)}>Dismiss</button>
+          )}
         </div>
       )}
 

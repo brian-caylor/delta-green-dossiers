@@ -6,12 +6,13 @@ import { readCache, writeCache } from "../lib/cache.js";
 // Cloud-first characters hook with a per-user IndexedDB read cache.
 //
 // - On mount / user change: fetch the roster from Firestore. On success,
-//   mirror to the cache. On failure, hydrate from the cache and flip
-//   `readOnly` true so write attempts surface a useful error.
-// - All writes (updateChar, addLogEntry, setCharacters) debounce a diff
-//   against the last-synced snapshot and push upserts/deletes to Firestore.
-// - `activeId` stays local (cache-only). Which character is open does not
-//   need to sync across devices.
+//   mirror to the cache. On failure, hydrate from the cache read-only.
+// - Authoritative offline signal is navigator.onLine + browser
+//   `online`/`offline` events, NOT a stalled Firestore request. As soon as
+//   the browser says it's offline we flip read-only and surface the banner;
+//   on reconnect we refetch the roster and resume sync.
+// - Writes (updateChar, addLogEntry, setCharacters) are blocked while
+//   read-only is in effect so edits can't silently disappear.
 export function useCharacters() {
   const { user } = useAuth();
   const userId = user?.uid ?? null;
@@ -20,46 +21,61 @@ export function useCharacters() {
   const [activeId, setActiveIdState] = useState(null);
   const [loaded, setLoaded] = useState(false);
   const [storageError, setStorageError] = useState(null);
-  const [readOnly, setReadOnly] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine !== false);
+  const [cloudReachable, setCloudReachable] = useState(true);
 
-  // Snapshot of the last roster we successfully synced to cloud, keyed by id.
-  // Used to diff on save so we know what to upsert vs. delete.
+  // readOnly is derived. Any write path must check this BEFORE mutating
+  // local state, otherwise the user's edits get lost on reload.
+  const readOnly = !isOnline || !cloudReachable;
+
   const syncedRef = useRef(new Map());
   const saveTimeout = useRef(null);
 
-  // Load on mount / user change. If there is no user the auth gate
-  // is rendering LoginScreen instead of the app — we simply don't load.
+  // Browser online/offline listeners. This is the source of truth for
+  // network connectivity — faster and more reliable than waiting for a
+  // Firestore request to time out.
+  useEffect(() => {
+    const goOnline = () => {
+      setIsOnline(true);
+      setStorageError(null);
+    };
+    const goOffline = () => {
+      setIsOnline(false);
+      setStorageError("Offline — reconnect to edit. Your changes won't save until you're back online.");
+    };
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  // Load (and re-load on reconnect) from Firestore.
+  const loadRoster = useCallback(async (uid) => {
+    const fetched = await Promise.race([
+      listCharacters(uid),
+      new Promise((res) => setTimeout(() => res({ characters: null, error: new Error("Cloud fetch timed out after 10s") }), 10000)),
+    ]);
+    const { characters: cloudChars, error } = fetched;
+    if (error) console.error("[useCharacters] listCharacters error:", error);
+    return { cloudChars, error };
+  }, []);
+
+  // Initial load on mount / userId change.
   useEffect(() => {
     if (!userId) return;
-
     let cancelled = false;
 
     (async () => {
       setLoaded(false);
-      setStorageError(null);
-      // Fail-safe: if listCharacters stalls for more than 10 s, bail to cache
-      // mode rather than sitting on the splash forever. listCharacters already
-      // catches errors; this guards against a hung request.
-      const fetched = await Promise.race([
-        listCharacters(userId),
-        new Promise((res) => setTimeout(() => res({ characters: null, error: new Error("Cloud fetch timed out after 10s") }), 10000)),
-      ]);
-      const { characters: cloudChars, error } = fetched;
-      if (error) console.error("[useCharacters] listCharacters error:", error);
-      if (cancelled) return;
+      // Only reset storageError here if online — preserve the offline banner
+      // set by the listener above.
+      if (navigator.onLine !== false) setStorageError(null);
 
-      if (!error && cloudChars) {
-        setCharactersState(cloudChars);
-        syncedRef.current = new Map(cloudChars.map(c => [c.id, c]));
-        setReadOnly(false);
-        // Seed activeId from cache if possible.
-        const cached = await readCache(userId);
-        if (cancelled) return;
-        const cachedActive = cached?.activeId;
-        setActiveIdState(cachedActive && cloudChars.some(c => c.id === cachedActive) ? cachedActive : null);
-        await writeCache(userId, cloudChars, cachedActive ?? null);
-      } else {
-        // Cloud fetch failed — fall back to cache in read-only mode.
+      // If the browser already knows it's offline, skip the Firestore hit
+      // and go straight to cache. Firestore would throw anyway.
+      if (navigator.onLine === false) {
         const cached = await readCache(userId);
         if (cancelled) return;
         if (cached) {
@@ -71,17 +87,70 @@ export function useCharacters() {
           setActiveIdState(null);
           syncedRef.current = new Map();
         }
-        setReadOnly(true);
+        setCloudReachable(false);
+        setStorageError("Offline — showing last cached data. Reconnect to edit.");
+        setLoaded(true);
+        return;
+      }
+
+      const { cloudChars, error } = await loadRoster(userId);
+      if (cancelled) return;
+
+      if (!error && cloudChars) {
+        setCharactersState(cloudChars);
+        syncedRef.current = new Map(cloudChars.map(c => [c.id, c]));
+        setCloudReachable(true);
+        const cached = await readCache(userId);
+        if (cancelled) return;
+        const cachedActive = cached?.activeId;
+        setActiveIdState(cachedActive && cloudChars.some(c => c.id === cachedActive) ? cachedActive : null);
+        await writeCache(userId, cloudChars, cachedActive ?? null);
+      } else {
+        const cached = await readCache(userId);
+        if (cancelled) return;
+        if (cached) {
+          setCharactersState(cached.characters);
+          setActiveIdState(cached.activeId);
+          syncedRef.current = new Map(cached.characters.map(c => [c.id, c]));
+        } else {
+          setCharactersState([]);
+          setActiveIdState(null);
+          syncedRef.current = new Map();
+        }
+        setCloudReachable(false);
         if (error) setStorageError(`Offline — cloud unreachable: ${error.message || error}`);
       }
       setLoaded(true);
     })();
 
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, loadRoster]);
 
-  // Diff-based cloud sync. Compares current `characters` against
-  // `syncedRef` and emits the minimal set of upserts + deletes.
+  // When we come back online (or cloud becomes reachable again), refetch
+  // the roster so we pick up any changes made on another device and so the
+  // local snapshot matches cloud before sync resumes.
+  useEffect(() => {
+    if (!userId || !loaded) return;
+    if (!isOnline) return;
+    if (cloudReachable) return;
+    let cancelled = false;
+    (async () => {
+      const { cloudChars, error } = await loadRoster(userId);
+      if (cancelled) return;
+      if (!error && cloudChars) {
+        setCharactersState(cloudChars);
+        syncedRef.current = new Map(cloudChars.map(c => [c.id, c]));
+        setCloudReachable(true);
+        setStorageError(null);
+        await writeCache(userId, cloudChars, activeId);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isOnline, cloudReachable, userId, loaded, loadRoster, activeId]);
+
+  // Diff-based cloud sync. Blocked while read-only. On cloud failure we
+  // flip cloudReachable=false so the offline banner fires and writes are
+  // rejected until reconnect.
   const syncCloud = useCallback(async (chars, aid) => {
     if (!userId || readOnly) return;
     const prev = syncedRef.current;
@@ -108,7 +177,8 @@ export function useCharacters() {
     const results = await Promise.all(ops);
     const firstError = results.find(r => r.error);
     if (firstError) {
-      setStorageError(`Cloud save failed: ${firstError.error.message || firstError.error}`);
+      setCloudReachable(false);
+      setStorageError(`Cloud save failed: ${firstError.error.message || firstError.error}. Your changes were not saved.`);
       return;
     }
 
@@ -117,24 +187,32 @@ export function useCharacters() {
     setStorageError(null);
   }, [userId, readOnly]);
 
-  // Debounced save that runs after any state mutation once loaded.
+  // Debounced save on any state mutation once loaded. Guard against running
+  // while read-only — otherwise we'd diff against syncedRef and try to sync.
   useEffect(() => {
-    if (!loaded || !userId) return;
+    if (!loaded || !userId || readOnly) return;
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
       syncCloud(characters, activeId);
     }, 500);
     return () => { if (saveTimeout.current) clearTimeout(saveTimeout.current); };
-  }, [characters, activeId, loaded, userId, syncCloud]);
+  }, [characters, activeId, loaded, userId, readOnly, syncCloud]);
 
-  // Wrapped setters so callers can't easily bypass sync.
+  // Write-path guards. Each is a no-op with an explanatory banner when
+  // read-only — that way the user sees feedback instead of silent editing
+  // that evaporates on reload or re-sync.
+  const readOnlyMessage = () => isOnline
+    ? "Cloud unreachable — changes can't be saved right now."
+    : "Offline — reconnect to edit. Changes won't save until you're back online.";
+
   const setCharacters = useCallback((next) => {
     if (readOnly) {
-      setStorageError("Offline — reconnect to edit.");
+      setStorageError(readOnlyMessage());
       return;
     }
     setCharactersState(next);
-  }, [readOnly]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, isOnline]);
 
   const setActiveId = useCallback((id) => {
     setActiveIdState(id);
@@ -144,11 +222,12 @@ export function useCharacters() {
 
   const updateChar = useCallback((updater) => {
     if (readOnly) {
-      setStorageError("Offline — reconnect to edit.");
+      setStorageError(readOnlyMessage());
       return;
     }
     setCharactersState(prev => prev.map(c => c.id === activeId ? { ...updater(c), updatedAt: new Date().toISOString() } : c));
-  }, [activeId, readOnly]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, readOnly, isOnline]);
 
   const addLogEntry = useCallback((label, from, to, source = "manual") => {
     if (readOnly) return;
@@ -170,7 +249,7 @@ export function useCharacters() {
     loaded,
     activeChar,
     storageError, setStorageError,
-    readOnly,
+    readOnly, isOnline,
     updateChar, addLogEntry,
   };
 }
