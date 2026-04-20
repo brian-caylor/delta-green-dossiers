@@ -8,26 +8,50 @@ import {
 import { auth, googleProvider } from "../lib/firebase.js";
 import { AuthContext } from "../lib/AuthContext.js";
 
+// If Firebase Auth hasn't told us anything after this long, stop blocking
+// the UI. The user will get routed to LoginScreen if no session hydrated,
+// so they can at least sign in again.
+const AUTH_INIT_TIMEOUT_MS = 6000;
+
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // CRITICAL: when using signInWithRedirect, Firebase parks the pending
-    // auth state in IndexedDB before navigating to Google. On the way back,
-    // we must call getRedirectResult to finalize the sign-in — otherwise
-    // the page reloads, sees no session, and renders LoginScreen again.
-    // getRedirectResult also triggers onAuthStateChanged with the new user.
-    getRedirectResult(auth).catch((err) => {
-      console.error("Redirect sign-in did not complete:", err);
-    });
+    let resolved = false;
+    const resolveOnce = (u) => {
+      if (resolved) return;
+      resolved = true;
+      setUser(u ?? null);
+      setLoading(false);
+    };
+
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) console.log("[auth] redirect sign-in complete");
+      })
+      .catch((err) => console.error("[auth] redirect result error:", err));
 
     const unsub = onAuthStateChanged(
       auth,
-      (u) => { setUser(u ?? null); setLoading(false); },
-      (err) => { console.error("Auth listener error:", err); setLoading(false); },
+      (u) => {
+        console.log("[auth] state changed", { hasUser: !!u });
+        resolveOnce(u);
+      },
+      (err) => {
+        console.error("[auth] listener error:", err);
+        resolveOnce(null);
+      },
     );
-    return unsub;
+
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        console.warn(`[auth] init timed out after ${AUTH_INIT_TIMEOUT_MS}ms; unblocking UI`);
+        resolveOnce(null);
+      }
+    }, AUTH_INIT_TIMEOUT_MS);
+
+    return () => { clearTimeout(timeout); unsub(); };
   }, []);
 
   const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);
