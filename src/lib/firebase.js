@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -22,10 +22,7 @@ if (!config.apiKey || !config.projectId || !config.authDomain || !config.appId) 
 export const app = initializeApp(config);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-
-// Firestore with single-tab persistent cache. Multi-tab mode requires
-// browser locks that aren't universally reliable; single-tab is safer
-// and still gives us IndexedDB-backed offline reads.
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache(),
-});
+// In-memory Firestore cache for now. We can re-enable IndexedDB persistence
+// once the auth/load flow is fully verified — persistent cache was stalling
+// the initial render in some environments.
+export const db = getFirestore(app);

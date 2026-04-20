@@ -11,16 +11,26 @@ export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  console.log("[AuthProvider] render", { loading, hasUser: !!user });
+
   useEffect(() => {
-    // onAuthStateChanged always fires once with the current user (null or
-    // a User) after Firebase initializes persistence. It also fires after
-    // a redirect sign-in completes, so we don't need getRedirectResult
-    // separately for the happy path.
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u ?? null);
-      setLoading(false);
-    });
-    return unsub;
+    console.log("[AuthProvider] mount — setting up onAuthStateChanged");
+    const unsub = onAuthStateChanged(
+      auth,
+      (u) => {
+        console.log("[AuthProvider] onAuthStateChanged fired", { hasUser: !!u });
+        setUser(u ?? null);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("[AuthProvider] onAuthStateChanged error", err);
+        setLoading(false);
+      },
+    );
+    return () => {
+      console.log("[AuthProvider] unmount");
+      unsub();
+    };
   }, []);
 
   const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);
