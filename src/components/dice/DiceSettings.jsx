@@ -1,4 +1,4 @@
-import { DEFAULT_DICE_SETTINGS } from "../../hooks/useDiceSettings.js";
+import { DEFAULT_DICE_SETTINGS, DICE_STYLES } from "../../hooks/useDiceSettings.js";
 
 const SIZES = [
   { value: "small",  label: "Small" },
@@ -16,10 +16,15 @@ export default function DiceSettings({ settings, update, reset, onBack }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <button
             type="button"
-            className="btn btn-tiny btn-ghost"
+            className="dice-icon-button"
             onClick={onBack}
             title="Back to roller"
-          >‹</button>
+            aria-label="Back"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
           <span className="label-lg">DICE SETTINGS</span>
         </div>
       </div>
@@ -35,6 +40,25 @@ export default function DiceSettings({ settings, update, reset, onBack }) {
               onClick={() => update({ size: value })}
             >
               {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <hr className="divider" />
+
+      <div className="dice-section">
+        <div className="dice-section-label">Dice Style</div>
+        <div className="dice-style-list">
+          {DICE_STYLES.map(({ value, label, hint }) => (
+            <button
+              key={value}
+              type="button"
+              className={"dice-style-row" + (settings.style === value ? " active" : "")}
+              onClick={() => update({ style: value })}
+            >
+              <span className="dice-style-name">{label}</span>
+              <span className="dice-style-hint">{hint}</span>
             </button>
           ))}
         </div>
@@ -105,6 +129,7 @@ export default function DiceSettings({ settings, update, reset, onBack }) {
 
 function isDefault(s) {
   return s.size === DEFAULT_DICE_SETTINGS.size
+    && s.style === DEFAULT_DICE_SETTINGS.style
     && s.colorMode === DEFAULT_DICE_SETTINGS.colorMode
     && s.customColor === DEFAULT_DICE_SETTINGS.customColor
     && s.shadows === DEFAULT_DICE_SETTINGS.shadows;

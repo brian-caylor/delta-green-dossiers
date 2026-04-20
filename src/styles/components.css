@@ -559,11 +559,79 @@ body.theme-greenscreen .paper {
   letter-spacing: 0.24em;
 }
 
+/* Compact icon button for panel headers — bigger hit area than btn-tiny
+ * so SVG icons get proper breathing room. */
+.dice-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s, background 0.1s;
+}
+.dice-icon-button:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: rgba(26, 23, 18, 0.04);
+}
+.dice-icon-button:active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
 /* ── Dice settings subpanel ─────────────────────────────── */
 .dice-settings {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.dice-style-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dice-style-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.dice-style-row:hover {
+  border-color: var(--ink);
+  background: rgba(26, 23, 18, 0.04);
+}
+.dice-style-row.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.dice-style-row.active .dice-style-hint { color: var(--paper); opacity: 0.75; }
+
+.dice-style-name {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.dice-style-hint {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--ink-3);
+  font-style: italic;
 }
 
 .dice-setting-chiprow {

@@ -37,6 +37,7 @@ function resolveThemeColor(settings) {
 function settingsToConfig(settings) {
   return {
     scale: settings?.scale ?? 10,
+    theme: settings?.style || "default",
     themeColor: resolveThemeColor(settings),
     enableShadows: settings?.shadows !== false,
   };

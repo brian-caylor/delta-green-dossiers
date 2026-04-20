@@ -29,6 +29,7 @@ export default function DiceRollerProvider({ onRoll, children }) {
   useEffect(() => {
     configure({
       scale: SIZE_TO_SCALE[settings.size] ?? 10,
+      style: settings.style,
       colorMode: settings.colorMode,
       customColor: settings.customColor,
       shadows: settings.shadows,

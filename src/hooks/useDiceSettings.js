@@ -9,10 +9,19 @@ const STORAGE_KEY = "dg-dice-settings";
 
 export const DEFAULT_DICE_SETTINGS = {
   size: "large",            // "small" | "medium" | "large" | "xl"
+  style: "default",         // "default" | "smooth" | "rust" | "dice-of-rolling"
   colorMode: "palette",     // "palette" (follow UI theme) | "custom"
-  customColor: "#8c1d1d",   // redact red
+  customColor: "#8c1d1d",
   shadows: true,
 };
+
+// Pretty labels + short descriptions for the style picker.
+export const DICE_STYLES = [
+  { value: "default",         label: "Paper",      hint: "Manila paper, typewriter numerals" },
+  { value: "smooth",          label: "Smooth",     hint: "Rounded edges, clean modern font" },
+  { value: "rust",            label: "Rust",       hint: "Weathered metal, distressed face" },
+  { value: "dice-of-rolling", label: "Classic",    hint: "Traditional multicolor RPG set" },
+];
 
 // Scale values chosen so dice are clearly visible without being absurd.
 export const SIZE_TO_SCALE = {
