@@ -559,6 +559,64 @@ body.theme-greenscreen .paper {
   letter-spacing: 0.24em;
 }
 
+/* ── Dice settings subpanel ─────────────────────────────── */
+.dice-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dice-setting-chiprow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.dice-setting-chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  padding: 6px 0;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.dice-setting-chip:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+.dice-setting-chip.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.dice-setting-radio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.dice-setting-radio input[type="radio"],
+.dice-setting-radio input[type="checkbox"] {
+  accent-color: var(--ink);
+}
+
+.dice-color-picker {
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--ink);
+  background: transparent;
+  cursor: pointer;
+}
+
 .dice-history {
   display: flex;
   flex-direction: column;

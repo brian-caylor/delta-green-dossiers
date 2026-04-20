@@ -3,27 +3,54 @@
 // - Dynamically imported on first roll so the ~400 KB library ships in
 //   its own chunk and is lazy-loaded.
 // - One DiceBox instance per page, attached to #dice-box-root.
-// - rollFormula() in src/utils/diceRoller.js owns the canonical values;
-//   the library is purely visual.
+// - Caller passes dice groups (not perGroup) and we derive notation.
+// - Caller passes per-player settings via configure(); they're applied
+//   to the library on init and on subsequent rolls via updateConfig.
 
 let instance = null;
 let initPromise = null;
-let currentTheme = null;
+let activeSettings = null;
 
-// Per-palette dice colours. themeColor overrides the material's base hue
-// while the default theme textures handle the highlights / numbers.
-const THEME_COLOR = {
+// Per-palette base colour, used when the user has chosen "match UI palette".
+const PALETTE_COLOR = {
   manila:      "#d9cdaa",
   bone:        "#e8e0cf",
   greenscreen: "#35552e",
 };
 
-function detectTheme() {
+function detectPalette() {
   if (typeof document === "undefined") return "manila";
   const cls = document.body.className;
   if (cls.includes("theme-greenscreen")) return "greenscreen";
   if (cls.includes("theme-bone")) return "bone";
   return "manila";
+}
+
+function resolveThemeColor(settings) {
+  if (settings?.colorMode === "custom" && settings.customColor) {
+    return settings.customColor;
+  }
+  return PALETTE_COLOR[detectPalette()];
+}
+
+// Map settings → library config. Shared between init and updateConfig.
+function settingsToConfig(settings) {
+  return {
+    scale: settings?.scale ?? 10,
+    themeColor: resolveThemeColor(settings),
+    enableShadows: settings?.shadows !== false,
+  };
+}
+
+// Allow the provider to publish the latest settings snapshot so the
+// library stays in sync. Safe to call repeatedly; cheap.
+export async function configure(settings) {
+  activeSettings = settings;
+  if (instance?.updateConfig) {
+    try {
+      await instance.updateConfig(settingsToConfig(settings));
+    } catch { /* noop — next init will pick up the change */ }
+  }
 }
 
 async function ensureInstance() {
@@ -40,25 +67,16 @@ async function ensureInstance() {
       throw new Error("dice-box container has zero dimensions");
     }
 
-    currentTheme = detectTheme();
-
     const box = new DiceBox({
       container: "#dice-box-root",
       assetPath: "/assets/dice-box/",
       theme: "default",
-      themeColor: THEME_COLOR[currentTheme],
-      // scale: controls die size. Library default is ~6 which looks
-      // small in a viewport-sized canvas. 9 puts the dice comfortably
-      // at the scale you'd want to read from across the room.
-      scale: 9,
+      ...settingsToConfig(activeSettings),
     });
 
     try {
       await box.init();
     } catch (err) {
-      // Surface the actual reason so we can diagnose; still re-throw so
-      // the provider's outer try/catch can fall back to showing just
-      // the numeric result.
       console.error("[dice] DiceBox init failed:", err);
       throw err;
     }
@@ -67,31 +85,18 @@ async function ensureInstance() {
     return box;
   })();
 
-  // If init fails, let the next call retry instead of being stuck.
   initPromise.catch(() => { initPromise = null; });
-
   return initPromise;
 }
 
-// Kick off the animation for a set of dice groups. We hand the library
-// ONLY the dice groups — modifiers are our math, and bare-die notation
-// like "d100" is rejected by dice-box's parser (needs explicit counts).
-// Build "1d100", "2d6+1d4", etc.
-//
-// Accepts either parsed groups ({count, sides}) or per-group results
-// ({sides, rolls[]}). Older callers passed the latter; the current
-// flow hands parsed groups over so the library can roll its own
-// physics-driven values.
+// Kick off the animation. Accepts either parsed groups ({count, sides})
+// or per-group results ({sides, rolls[]}).
 export async function animate(groups) {
   const box = await ensureInstance();
 
-  const newTheme = detectTheme();
-  if (newTheme !== currentTheme && box.updateConfig) {
-    try {
-      box.updateConfig({ themeColor: THEME_COLOR[newTheme] });
-      currentTheme = newTheme;
-    } catch { /* noop */ }
-  }
+  // Keep the library config fresh each roll — palette might have
+  // switched, settings might have changed.
+  try { await box.updateConfig(settingsToConfig(activeSettings)); } catch { /* noop */ }
 
   const notation = groups.map((g) => {
     const count = typeof g.count === "number" ? g.count : Array.isArray(g.rolls) ? g.rolls.length : 1;
@@ -104,8 +109,4 @@ export async function animate(groups) {
 export async function clearScene() {
   if (!instance) return;
   try { instance.clear(); } catch { /* noop */ }
-}
-
-export function isAvailable() {
-  return !!instance;
 }

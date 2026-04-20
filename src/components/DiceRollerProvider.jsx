@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { DiceRollerContext } from "../lib/DiceRollerContext.js";
 import { parseFormula, rollFormula } from "../utils/diceRoller.js";
-import { animate, clearScene } from "../lib/diceBox.js";
+import { animate, clearScene, configure } from "../lib/diceBox.js";
+import { useDiceSettings, SIZE_TO_SCALE } from "../hooks/useDiceSettings.js";
 import DiceOverlay from "./dice/DiceOverlay.jsx";
 import DiceRollerPanel from "./dice/DiceRollerPanel.jsx";
 
@@ -16,13 +17,23 @@ import DiceRollerPanel from "./dice/DiceRollerPanel.jsx";
 export default function DiceRollerProvider({ onRoll, children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [history, setHistory] = useState([]);
-  // Currently animating roll — overlay renders this while dice tumble.
   const [activeRoll, setActiveRoll] = useState(null);
-  // True from the moment the user clicks Roll until the result card
-  // finishes displaying. DiceRollerPanel hides itself while this is true
-  // so the dice aren't obscured.
   const [isRolling, setIsRolling] = useState(false);
   const animatingRef = useRef(false);
+
+  const { settings, update: updateSettings, reset: resetSettings } = useDiceSettings();
+
+  // Keep dice-box in sync whenever the user tweaks settings or the
+  // underlying palette changes. configure() is a no-op until the
+  // library has been initialised (first roll).
+  useEffect(() => {
+    configure({
+      scale: SIZE_TO_SCALE[settings.size] ?? 10,
+      colorMode: settings.colorMode,
+      customColor: settings.customColor,
+      shadows: settings.shadows,
+    });
+  }, [settings]);
 
   const open = useCallback(() => setIsOpen(true), []);
   const close = useCallback(() => setIsOpen(false), []);
@@ -87,7 +98,13 @@ export default function DiceRollerProvider({ onRoll, children }) {
   // eslint-disable-next-line no-unused-vars
   const broadcast = useCallback((_entry) => { /* noop — [FWD-COMPAT] */ }, []);
 
-  const value = { isOpen, open, close, toggle, roll, history, clearHistory, activeRoll, isRolling, broadcast };
+  const value = {
+    isOpen, open, close, toggle,
+    roll, history, clearHistory,
+    activeRoll, isRolling,
+    settings, updateSettings, resetSettings,
+    broadcast,
+  };
 
   return (
     <DiceRollerContext.Provider value={value}>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useDiceRoller } from "../../hooks/useDiceRoller.js";
 import { DieIcon } from "./DiceIcons.jsx";
+import DiceSettings from "./DiceSettings.jsx";
 
 const DIE_SIDES = [4, 6, 8, 10, 12, 20, 100];
 
@@ -13,7 +14,10 @@ const DIE_SIDES = [4, 6, 8, 10, 12, 20, 100];
 //                skill checks and multi-die rolls.
 // Recent history: last 10 rolls this session.
 export default function DiceRollerPanel() {
-  const { isOpen, isRolling, close, roll, history, clearHistory } = useDiceRoller();
+  const {
+    isOpen, isRolling, close, roll, history, clearHistory,
+    settings, updateSettings, resetSettings,
+  } = useDiceRoller();
 
   // Advanced-roll state
   const [count, setCount] = useState(1);
@@ -21,6 +25,7 @@ export default function DiceRollerPanel() {
   const [modifier, setModifier] = useState(0);
   const [useTarget, setUseTarget] = useState(false);
   const [target, setTarget] = useState("");
+  const [view, setView] = useState("roller"); // "roller" | "settings"
 
   const panelRef = useRef(null);
 
@@ -55,11 +60,40 @@ export default function DiceRollerPanel() {
     roll(advancedFormula, opts);
   };
 
+  // Settings subview takes over the whole panel body, keeping the
+  // outer chrome (slide-in, outside-click, etc.) intact.
+  if (view === "settings") {
+    return (
+      <div ref={panelRef} className="dice-roller-panel" role="dialog" aria-label="Dice settings">
+        <DiceSettings
+          settings={settings}
+          update={updateSettings}
+          reset={resetSettings}
+          onBack={() => setView("roller")}
+        />
+      </div>
+    );
+  }
+
   return (
     <div ref={panelRef} className="dice-roller-panel" role="dialog" aria-label="Dice roller">
       <div className="dice-roller-header">
         <span className="label-lg">FIELD DICE</span>
-        <button type="button" className="btn btn-tiny btn-ghost" onClick={close}>✕</button>
+        <div style={{ display: "flex", gap: 4 }}>
+          <button
+            type="button"
+            className="btn btn-tiny btn-ghost"
+            onClick={() => setView("settings")}
+            title="Dice settings"
+            aria-label="Dice settings"
+          >⚙</button>
+          <button
+            type="button"
+            className="btn btn-tiny btn-ghost"
+            onClick={close}
+            title="Close"
+          >✕</button>
+        </div>
       </div>
 
       {/* ── Basic Roll ────────────────────────────────────────── */}
