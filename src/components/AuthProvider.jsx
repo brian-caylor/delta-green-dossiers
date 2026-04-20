@@ -11,26 +11,13 @@ export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  console.log("[AuthProvider] render", { loading, hasUser: !!user });
-
   useEffect(() => {
-    console.log("[AuthProvider] mount — setting up onAuthStateChanged");
     const unsub = onAuthStateChanged(
       auth,
-      (u) => {
-        console.log("[AuthProvider] onAuthStateChanged fired", { hasUser: !!u });
-        setUser(u ?? null);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("[AuthProvider] onAuthStateChanged error", err);
-        setLoading(false);
-      },
+      (u) => { setUser(u ?? null); setLoading(false); },
+      (err) => { console.error("Auth listener error:", err); setLoading(false); },
     );
-    return () => {
-      console.log("[AuthProvider] unmount");
-      unsub();
-    };
+    return unsub;
   }, []);
 
   const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);

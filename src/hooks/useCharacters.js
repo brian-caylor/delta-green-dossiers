@@ -5,16 +5,16 @@ import { readCache, writeCache } from "../lib/cache.js";
 
 // Cloud-first characters hook with a per-user IndexedDB read cache.
 //
-// - On mount / user change: fetch the roster from Supabase. On success,
+// - On mount / user change: fetch the roster from Firestore. On success,
 //   mirror to the cache. On failure, hydrate from the cache and flip
 //   `readOnly` true so write attempts surface a useful error.
 // - All writes (updateChar, addLogEntry, setCharacters) debounce a diff
-//   against the last-synced snapshot and push upserts/deletes to Supabase.
+//   against the last-synced snapshot and push upserts/deletes to Firestore.
 // - `activeId` stays local (cache-only). Which character is open does not
 //   need to sync across devices.
 export function useCharacters() {
   const { user } = useAuth();
-  const userId = user?.id ?? null;
+  const userId = user?.uid ?? null;
 
   const [characters, setCharactersState] = useState([]);
   const [activeId, setActiveIdState] = useState(null);
