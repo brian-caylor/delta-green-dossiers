@@ -13,7 +13,7 @@ const DIE_SIDES = [4, 6, 8, 10, 12, 20, 100];
 //                skill checks and multi-die rolls.
 // Recent history: last 10 rolls this session.
 export default function DiceRollerPanel() {
-  const { isOpen, close, roll, history, clearHistory } = useDiceRoller();
+  const { isOpen, isRolling, close, roll, history, clearHistory } = useDiceRoller();
 
   // Advanced-roll state
   const [count, setCount] = useState(1);
@@ -38,7 +38,9 @@ export default function DiceRollerPanel() {
     return () => window.removeEventListener("mousedown", onDown);
   }, [isOpen, close]);
 
-  if (!isOpen) return null;
+  // Hide the panel while a roll is in flight so the dice can tumble over
+  // the full viewport. It reappears 2.5 s after the dice settle.
+  if (!isOpen || isRolling) return null;
 
   const isSingleD100 = count === 1 && sides === 100 && modifier === 0;
   const targetActive = isSingleD100 && useTarget && target !== "";
