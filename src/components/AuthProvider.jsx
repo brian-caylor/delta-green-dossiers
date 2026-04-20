@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import {
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut as fbSignOut,
 } from "firebase/auth";
 import { auth, googleProvider } from "../lib/firebase.js";
 import { AuthContext } from "../lib/AuthContext.js";
 
-// If Firebase Auth hasn't told us anything after this long, stop blocking
-// the UI. The user will get routed to LoginScreen if no session hydrated,
-// so they can at least sign in again.
+// Safety net: if Firebase Auth hasn't told us anything in this long, stop
+// blocking the UI. Better to surface the login screen than to hang forever.
 const AUTH_INIT_TIMEOUT_MS = 6000;
 
 export default function AuthProvider({ children }) {
@@ -26,16 +24,10 @@ export default function AuthProvider({ children }) {
       setLoading(false);
     };
 
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) console.log("[auth] redirect sign-in complete");
-      })
-      .catch((err) => console.error("[auth] redirect result error:", err));
-
     const unsub = onAuthStateChanged(
       auth,
       (u) => {
-        console.log("[auth] state changed", { hasUser: !!u });
+        console.log("[auth] state changed", { hasUser: !!u, uid: u?.uid });
         resolveOnce(u);
       },
       (err) => {
@@ -54,7 +46,20 @@ export default function AuthProvider({ children }) {
     return () => { clearTimeout(timeout); unsub(); };
   }, []);
 
-  const signInWithGoogle = () => signInWithRedirect(auth, googleProvider);
+  // Popup flow. The COOP warnings seen in console (about window.closed) are
+  // cosmetic in modern Firebase SDK: the popup still completes, auth state
+  // lands in IndexedDB, and onAuthStateChanged fires with the new user.
+  const signInWithGoogle = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      if (err?.code === "auth/popup-closed-by-user" || err?.code === "auth/cancelled-popup-request") {
+        return; // user cancelled; don't surface as error
+      }
+      throw err;
+    }
+  };
+
   const signOut = () => fbSignOut(auth);
 
   const value = { user, session: user, loading, signInWithGoogle, signOut };
