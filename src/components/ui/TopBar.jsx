@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useAuth } from "../../hooks/useAuth.js";
 import ThemeSwitcher from "./ThemeSwitcher";
 import DiceButton from "../dice/DiceButton.jsx";
+import SettingsButton from "./SettingsButton.jsx";
+import SettingsModal from "../modals/SettingsModal.jsx";
 
 function Crest() {
   return (
@@ -15,6 +18,7 @@ function Crest() {
 
 export default function TopBar() {
   const { user, signOut } = useAuth();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const displayName = user?.displayName || user?.email || "AGENT";
   return (
     <header className="topbar">
@@ -24,12 +28,14 @@ export default function TopBar() {
       </div>
       <div className="topbar-right">
         <DiceButton />
+        <SettingsButton isOpen={settingsOpen} onClick={() => setSettingsOpen((o) => !o)} />
         <ThemeSwitcher />
         <span title={user?.email}>{displayName.toUpperCase()}</span>
         <button type="button" className="btn btn-tiny" onClick={signOut} style={{ background: "transparent", color: "var(--paper)", borderColor: "var(--paper)" }}>
           SIGN OUT
         </button>
       </div>
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </header>
   );
 }
