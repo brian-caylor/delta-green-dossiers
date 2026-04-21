@@ -28,9 +28,9 @@ export default function TopBar() {
       </div>
       <div className="topbar-right">
         <DiceButton />
-        <SettingsButton isOpen={settingsOpen} onClick={() => setSettingsOpen((o) => !o)} />
         <ThemeSwitcher />
         <span title={user?.email}>{displayName.toUpperCase()}</span>
+        <SettingsButton isOpen={settingsOpen} onClick={() => setSettingsOpen((o) => !o)} />
         <button type="button" className="btn btn-tiny" onClick={signOut} style={{ background: "transparent", color: "var(--paper)", borderColor: "var(--paper)" }}>
           SIGN OUT
         </button>

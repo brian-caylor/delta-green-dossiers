@@ -1,3 +1,4 @@
+import pkg from "../../../package.json";
 import { parseChangelog } from "../../lib/changelog.js";
 
 // GitHub location of the docs. Hardcoded per the v1 plan — move to an
@@ -24,7 +25,7 @@ export default function AboutSection() {
           <div style={{ fontFamily: "var(--font-hand)", fontSize: 18, color: "var(--ink)", letterSpacing: 1 }}>
             Delta Green — Agent Dossiers
           </div>
-          <div className="label">Last updated {latestDate}</div>
+          <div className="label">Version {pkg.version} · Updated {latestDate}</div>
         </div>
       </div>
 
