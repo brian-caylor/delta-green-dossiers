@@ -57,6 +57,11 @@ A tab-based digital character sheet that works on phones, tablets, and desktops.
 - Per-device settings: size, style, color, shadows
 - Every roll logs to the active character's session log with a `ROLL` badge
 
+**Global settings**
+- Sliders icon in the top bar opens a Settings modal
+- Appearance, Dice, About (What's new + docs links), and Account sections
+- Composes the existing `useTheme` and `useDiceSettings` hooks — no new persistence, all per-device IDB
+
 **Offline behaviour**
 - Works offline for reading existing characters (cached in IndexedDB)
 - Red banner appears the moment writes can't reach Firestore; edits are blocked so nothing gets silently lost
