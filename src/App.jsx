@@ -310,8 +310,11 @@ function DossierApp() {
     const failedSkills = activeChar.skills
       .map((skill, i) => ({ skill, i }))
       .filter(({ skill }) => skill.failed && skill.name !== "Unnatural");
+    const failedOther = (activeChar.otherSkills || [])
+      .map((skill, i) => ({ skill, i }))
+      .filter(({ skill }) => skill.failed && skill.name);
 
-    if (failedSkills.length === 0) {
+    if (failedSkills.length + failedOther.length === 0) {
       setSessionReport({ gains: [], noneChecked: true });
       return;
     }
@@ -326,9 +329,13 @@ function DossierApp() {
     const failedSkills = activeChar.skills
       .map((skill, i) => ({ skill, i }))
       .filter(({ skill }) => skill.failed && skill.name !== "Unnatural");
+    const failedOther = (activeChar.otherSkills || [])
+      .map((skill, i) => ({ skill, i }))
+      .filter(({ skill }) => skill.failed && skill.name);
 
     const gains = [];
     const updatedSkills = [...activeChar.skills];
+    const updatedOther = [...(activeChar.otherSkills || [])];
 
     for (const { skill, i } of failedSkills) {
       const roll = Math.floor(Math.random() * 4) + 1;
@@ -338,7 +345,15 @@ function DossierApp() {
       gains.push({ name: skill.name + (skill.hasSpec && skill.spec ? ` (${skill.spec})` : ""), roll, from, to });
     }
 
-    updateChar(c => ({ ...c, skills: updatedSkills }));
+    for (const { skill, i } of failedOther) {
+      const roll = Math.floor(Math.random() * 4) + 1;
+      const from = Number(skill.value) || 0;
+      const to = Math.min(99, from + roll);
+      updatedOther[i] = { ...updatedOther[i], value: to, failed: false };
+      gains.push({ name: skill.name, roll, from, to });
+    }
+
+    updateChar(c => ({ ...c, skills: updatedSkills, otherSkills: updatedOther }));
     for (const g of gains) {
       addLogEntry(`${g.name} ${g.from}→${g.to}`, g.from, g.to, "advancement");
     }
@@ -821,7 +836,8 @@ function DossierApp() {
                 justifyContent: isMobile ? "space-between" : undefined,
               }}>
                 {!isKIA && (() => {
-                  const failCount = activeChar.skills.filter((s) => s.failed).length;
+                  const failCount = activeChar.skills.filter((s) => s.failed).length
+                    + (activeChar.otherSkills || []).filter((s) => s.failed && s.name).length;
                   return (
                     <button
                       type="button"
