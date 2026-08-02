@@ -122,8 +122,12 @@ export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, 
     }
   }, [updateChar, addLogEntry]);
 
+  const updateOtherSkillFailed = useCallback((i, val) => {
+    updateChar(c => { const otherSkills = [...c.otherSkills]; otherSkills[i] = { ...otherSkills[i], failed: val }; return { ...c, otherSkills }; });
+  }, [updateChar]);
+
   const addOtherSkill = useCallback(() => {
-    updateChar(c => ({ ...c, otherSkills: [...c.otherSkills, { name: "", value: "" }] }));
+    updateChar(c => ({ ...c, otherSkills: [...c.otherSkills, { name: "", value: "", failed: false }] }));
   }, [updateChar]);
 
   const handleSkillRoll = useCallback((i, skill, result) => {
@@ -133,11 +137,12 @@ export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, 
     if (!result.pass && !skill.failed) updateSkillFailed(i, true);
   }, [addLogEntry, updateSkillFailed]);
 
-  const handleOtherSkillRoll = useCallback((skill, result) => {
+  const handleOtherSkillRoll = useCallback((i, skill, result) => {
     if (!skill.name) return;
     const tag = result.isCritical ? " CRITICAL" : result.isFumble ? " FUMBLE" : result.pass ? "" : " FAIL";
     addLogEntry(`Roll ${skill.name}: ${result.roll} vs ${result.target}%${tag}`, null, null, "manual");
-  }, [addLogEntry]);
+    if (!result.pass && !skill.failed) updateOtherSkillFailed(i, true);
+  }, [addLogEntry, updateOtherSkillFailed]);
 
   return (
     <div className="col" style={{ gap: 24 }}>
@@ -193,6 +198,7 @@ export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, 
         <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? "100%" : "280px"}, 1fr))`, gap: 0 }}>
           {activeChar.otherSkills.map((skill, i) => (
             <div key={i} style={{ ...skillRow, opacity: isKIA ? 0.7 : 1 }}>
+              <CheckBox checked={!!skill.failed} disabled={isLocked || !skill.name} onChange={val => updateOtherSkillFailed(i, val)} />
               <input type="text" value={skill.name} placeholder={`Skill ${i + 1}...`} disabled={isLocked}
                 onChange={e => updateOtherSkillName(i, e.target.value)}
                 className="field-line" style={{ flex: 1, fontSize: 13 }}
@@ -202,7 +208,7 @@ export const SkillsTab = memo(function SkillsTab({ activeChar, isKIA, isLocked, 
                 className="field-num" style={{ width: 50 }}
               />
               <span className="label">%</span>
-              {skill.name && <DiceButton target={Number(skill.value) || 0} disabled={isKIA} onResult={r => handleOtherSkillRoll(skill, r)} />}
+              {skill.name && <DiceButton target={Number(skill.value) || 0} disabled={isKIA} onResult={r => handleOtherSkillRoll(i, skill, r)} />}
             </div>
           ))}
         </div>

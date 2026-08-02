@@ -21,7 +21,7 @@ export function createNewCharacter() {
     mentalDisorders: "",
     sanLoss: { violence: [false, false, false], violenceAdapted: false, helplessness: [false, false, false], helplessnessAdapted: false },
     skills: DEFAULT_SKILLS.map(s => ({ ...s, value: s.base, failed: false })),
-    otherSkills: [{ name: "", value: "" }, { name: "", value: "" }, { name: "", value: "" }, { name: "", value: "" }, { name: "", value: "" }, { name: "", value: "" }],
+    otherSkills: [{ name: "", value: "", failed: false }, { name: "", value: "", failed: false }, { name: "", value: "", failed: false }, { name: "", value: "", failed: false }, { name: "", value: "", failed: false }, { name: "", value: "", failed: false }],
     wounds: "",
     firstAidAttempted: false,
     armorAndGear: "",
