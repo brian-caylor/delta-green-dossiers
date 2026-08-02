@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
 import { createNewCharacter } from "../data/defaultCharacter";
 import { calcHpMax, calcWpMax, calcSanMax } from "../utils/statDerivation";
+import { CODE_PHRASE } from "../data/realAgentQuestions";
+import RealAgentWizard from "./RealAgentWizard.jsx";
+
+// Typing the code phrase into either name field swaps in the assessment that
+// builds a dossier from the player rather than from a point pool.
+const isCodePhrase = (v) => v.trim().replace(/\s+/g, " ").toUpperCase() === CODE_PHRASE;
 
 const STATS = [
   { key: "str", label: "STRENGTH", desc: "Physical power and carrying capacity" },
@@ -22,6 +28,7 @@ const STAT_POOL = 72;
 
 export default function Wizard({ onCancel, onCreated, onCommit }) {
   const [step, setStep] = useState(0);
+  const [secret, setSecret] = useState(false);
   const [identity, setIdentity] = useState({
     firstName: "", lastName: "", profession: "", employer: "",
     nationality: "", sex: "", age: "", education: "",
@@ -42,6 +49,16 @@ export default function Wizard({ onCancel, onCreated, onCommit }) {
   };
 
   const setBondName = (i, v) => setBonds(b => b.map((x, idx) => idx === i ? { ...x, name: v } : x));
+
+  // Clears the field and hands off, so the phrase never lands in the dossier.
+  const setName = (field, value) => {
+    if (isCodePhrase(value)) {
+      setIdentity(s => ({ ...s, [field]: "" }));
+      setSecret(true);
+      return;
+    }
+    setIdentity(s => ({ ...s, [field]: value }));
+  };
 
   const finalize = () => {
     const base = createNewCharacter();
@@ -95,6 +112,10 @@ export default function Wizard({ onCancel, onCreated, onCommit }) {
     return true;
   };
 
+  if (secret) {
+    return <RealAgentWizard onCancel={onCancel} onCreated={onCreated} onCommit={onCommit} />;
+  }
+
   return (
     <div style={{ flex: 1, overflowY: "auto" }}>
       <div style={{ maxWidth: 780, margin: "0 auto", padding: "32px 28px 80px" }}>
@@ -127,11 +148,11 @@ export default function Wizard({ onCancel, onCreated, onCommit }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
                 <label className="label">Last Name</label>
-                <input className="field-line" autoFocus value={identity.lastName} onChange={e => setIdentity(s => ({ ...s, lastName: e.target.value }))} />
+                <input className="field-line" autoFocus value={identity.lastName} onChange={e => setName("lastName", e.target.value)} />
               </div>
               <div>
                 <label className="label">First Name</label>
-                <input className="field-line" value={identity.firstName} onChange={e => setIdentity(s => ({ ...s, firstName: e.target.value }))} />
+                <input className="field-line" value={identity.firstName} onChange={e => setName("firstName", e.target.value)} />
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
