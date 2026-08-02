@@ -8,6 +8,25 @@ are listed below with the date they went live on the production URL.
 
 ---
 
+## 2026-04-20 — Global Settings
+
+Every per-device preference lives in one place now, plus a path to the
+docs from inside the app.
+
+- New **sliders icon** in the top bar opens the **Settings** modal.
+- **Appearance** section — same three-way palette switcher as the top
+  bar, with a one-line description for each theme. Changes sync live.
+- **Dice** section — the same size / style / color / shadows controls
+  that live behind the dice panel's ⚙ icon, now a second entry point.
+- **About** section — the three most recent changelog entries inline,
+  plus a link to the full changelog on GitHub.
+- **Docs & Links** — jump to the User Guide, Quickstart, Troubleshooting,
+  or Readme without leaving the app.
+- **Account** section — display name, email, and a Sign Out button
+  (the top-bar Sign Out stays where it is).
+- Everything is per-device, stored in IndexedDB like the existing
+  preferences. Nothing new syncs to the cloud.
+
 ## 2026-04-20 — Global Dice Roller
 
 A visual 3D dice roller accessible from anywhere in the app.

@@ -22,6 +22,7 @@ TROUBLESHOOTING.md
 
 # Session handoff notes (local-only, session-specific)
 HANDOFF.md
+DEV_WORKFLOW.md
 .claude/handoffs/
 
 # Editor directories and files

@@ -32,6 +32,7 @@ This guide covers everything the app can do. For a friendlier 2-minute onboardin
 20. [Keyboard Shortcuts & Tips](#20-keyboard-shortcuts--tips)
 21. [Installing as a PWA](#21-installing-as-a-pwa)
 22. [Global Dice Roller](#22-global-dice-roller)
+23. [Settings](#23-settings)
 
 ---
 
@@ -675,6 +676,36 @@ The inline per-skill dice rollers on the Skills tab are unaffected — they cont
 - Roll history is **per session** — refreshing clears it. (The per-character session log is persistent across sessions.)
 - Modifiers must be flat numbers (`+3`, `−2`). Advanced notation like drop-lowest or advantage isn't supported — Delta Green doesn't use those.
 - **Coming later**: when Campaign / Handler mode ships, non-private rolls broadcast to the campaign feed in real time, while Handler rolls stay private.
+
+---
+
+## 23. Settings
+
+A **sliders icon** in the top bar (between the dice ⚄ icon and the palette switcher) opens the **Settings** modal. Everything in here is per-device — theme and dice preferences are stored in IndexedDB the same way they always were; nothing new syncs to the cloud.
+
+The modal is split into four sections, chosen from the nav on the left (or a scrollable tab row on phones):
+
+### Appearance
+The same MANILA / BONE / FIELD palette switcher as the top bar, with a short description for each option. Changes sync live: switching here updates the top-bar control and vice versa. See §18 for what each palette looks like.
+
+### Dice
+Every dice preference from the floating roller's ⚙ subpanel — size, style, color, shadows, Restore defaults — available here too. The two surfaces share state: adjusting in either place updates the other. See §22 for the dice roller itself.
+
+### About
+- **Build card** — app name and the date of the most recent changelog entry, so you can tell at a glance whether you're on a fresh load.
+- **What's New** — the three most recent changelog entries inline (date, title, and bullets). This is the first time the app surfaces "what changed" without opening GitHub.
+- **View full changelog** — link to the complete CHANGELOG.md on GitHub.
+- **Docs & Links** — one-click access to the User Guide, Quickstart, Troubleshooting, and Readme. All open in a new tab.
+
+### Account
+- Signed-in identity — display name, email, and an initial-letter avatar.
+- **Sign Out** — signs you out and returns to the login screen. The top-bar **SIGN OUT** button still works the same way; this is a second entry point.
+
+### How it relates to the other preferences
+
+The Settings modal doesn't replace the top-bar theme switcher or the dice panel's ⚙ subpanel — both remain where they are as shortcuts. Think of Settings as the canonical home for per-device preferences; the in-context controls are accelerators that write to the same storage.
+
+> **Coming later**: when Campaign / Handler mode ships, campaign-level options (broadcast preferences, handler-only toggles) will get their own Settings section.
 
 ---
 
